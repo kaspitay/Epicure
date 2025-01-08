@@ -1,0 +1,37 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+.fugaz-one-regular {
+  font-family: "Fugaz One", sans-serif;
+  font-weight: 400;
+  font-style: normal;
+}
+
+body {
+  font-family: Fugaz One, sans-serif;
+}
+
+.sidebar-link-div {
+  @apply flex items-center px-2;
+}
+
+.single-recipe-img {
+  @apply rounded-lg w-[103px] h-[98px] sm:w-[133px] sm:h-[128px] md:w-[133px] md:h-[128px] lg:w-[133px] lg:h-[128px] mr-4;
+}
+
+.single-recipe-div {
+  @apply flex flex-col items-center;
+}
+
+.second-title {
+  @apply text-[30.67px] font-bold text-white;
+}
+
+.recipe-list-div {
+  @apply grid grid-cols-2 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-5 gap-5 mt-4;
+}
+
+.sidebar-link {
+  @apply text-white bg-[#272727] px-4 rounded-lg drop-shadow-lg flex items-center justify-center;
+}

@@ -1,0 +1,46 @@
+.scrollbar-visible::-webkit-scrollbar {
+  display: block;
+}
+
+.scrollbar-invisible::-webkit-scrollbar {
+  display: none;
+}
+
+.scrollbar-hidden::-webkit-scrollbar {
+  display: none;
+}
+
+.dropdown-menu {
+  width: 300px; /* Increase the width as needed */
+  max-height: 400px; /* Add max-height for overflow */
+  overflow-y: auto; /* Add scroll for overflow */
+  z-index: 10; /* Ensure it's above other elements */
+}
+
+.dropdown-menu ul {
+  list-style: none;
+  padding: 0;
+  margin: 0;
+}
+
+.dropdown-menu li {
+  padding: 8px 12px; /* Adjust padding for better spacing */
+  border-bottom: 1px solid #333; /* Add bottom border for distinction */
+  cursor: pointer;
+}
+
+.dropdown-menu li:last-child {
+  border-bottom: none; /* Remove border for the last item */
+}
+
+.dropdown-menu li:hover {
+  background-color: #444; /* Highlight on hover */
+}
+
+.dropdown-menu li.text-blue-500 {
+  font-weight: bold; /* Bold text for selected items */
+}
+
+.dropdown-menu li.hover-bg {
+  background-color: #555; /* Add background color for hover */
+}

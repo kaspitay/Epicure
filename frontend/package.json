@@ -1,0 +1,45 @@
+{
+  "proxy": "http://localhost:3000",
+  "name": "epicure",
+  "private": true,
+  "version": "0.0.0",
+  "type": "module",
+  "scripts": {
+    "dev": "vite",
+    "build": "vite build",
+    "start": "vite",
+    "lint": "eslint . --ext js,jsx --report-unused-disable-directives --max-warnings 0",
+    "preview": "vite preview"
+  },
+  "dependencies": {
+    "@emotion/react": "^11.11.4",
+    "@emotion/styled": "^11.11.5",
+    "@mui/icons-material": "^5.16.1",
+    "@mui/material": "^5.16.1",
+    "@splidejs/react-splide": "^0.7.12",
+    "axios": "^1.6.8",
+    "localforage": "^1.10.0",
+    "match-sorter": "^6.3.4",
+    "react": "^18.2.0",
+    "react-dom": "^18.2.0",
+    "react-hook-form": "^7.51.1",
+    "react-icons": "^5.0.1",
+    "react-router-dom": "^6.22.3",
+    "sort-by": "^0.0.2"
+  },
+  "devDependencies": {
+    "@types/react": "^18.2.64",
+    "@types/react-dom": "^18.2.21",
+    "@vitejs/plugin-react": "^4.2.1",
+    "autoprefixer": "^10.4.18",
+    "daisyui": "^4.7.3",
+    "eslint": "^8.57.0",
+    "eslint-plugin-react": "^7.34.0",
+    "eslint-plugin-react-hooks": "^4.6.0",
+    "eslint-plugin-react-refresh": "^0.4.5",
+    "postcss": "^8.4.35",
+    "tailwind-scrollbar": "^3.1.0",
+    "tailwindcss": "^3.4.1",
+    "vite": "^5.2.10"
+  }
+}
