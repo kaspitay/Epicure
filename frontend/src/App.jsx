@@ -16,9 +16,12 @@ import SingleRecipePage from "./pages/SingleRecipePage/SingleRecipePage";
 import CoockBooks from "./pages/CoockBooks/CoockBooks";
 import ContentCreator from "./pages/ContentCreator/ContentCreator";
 import AddRecipe from "./pages/ContentCreator/AddRecipe/AddRecipe";
+import TagTest from './pages/ContentCreator/AddRecipe/TagTest';
+import DirectTagSelector from './pages/ContentCreator/AddRecipe/DirectTagSelector';
 import "./App.css";
 import BASE_URL from "./config";
 import { useRecipeContext } from "./context/RecipeContext";
+import TagInspector from './debug/TagInspector';
 
 const App = () => {
   const { user } = useContext(AuthContext);
@@ -68,6 +71,9 @@ const App = () => {
             path="/creatorSignup"
             element={!user ? <CreatorSignUp /> : <Navigate to="/" />}
           />
+          <Route path="/debug/tags" element={<TagInspector />} />
+          <Route path="/tag-test" element={<TagTest />} />
+          <Route path="/direct-tag-test" element={<DirectTagSelector />} />
         </Route>
         <Route path="*" element={<Navigate to="/" />} />
       </Routes>

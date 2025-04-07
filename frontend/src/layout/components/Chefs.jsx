@@ -2,7 +2,7 @@ import { LuChefHat } from "react-icons/lu";
 import { Link } from "react-router-dom";
 import { useAuthContext } from "../../hooks/useAuthContext";
 
-export default function Chefs() {
+export default function Chefs({ isExpanded = true }) {
   const { user } = useAuthContext();
 
   const renderChefs = () => {
@@ -24,6 +24,10 @@ export default function Chefs() {
     ));
     return chefLinks;
   };
+
+  if (!isExpanded) {
+    return null; // Don't render anything when collapsed
+  }
 
   return (
     <div className="row-span-5 w-full bg-[#1E1C1A] rounded-lg py-5 px-4 ">

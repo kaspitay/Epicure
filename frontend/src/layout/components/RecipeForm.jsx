@@ -1,9 +1,10 @@
-import React from "react";
+import React, { useMemo } from "react";
 import RecipeInput from "./RecipeInput";
 import foodMeasurements from "./foodMeasurements";
-import foodTags from "./foodTags";
 import { IoMdAddCircle } from "react-icons/io";
-import { FaMinusCircle } from "react-icons/fa";
+import { FaMinusCircle, FaTag, FaTags } from "react-icons/fa";
+import { TAG_CATEGORIES } from "../../constants";
+import TagButton from "../../pages/ContentCreator/AddRecipe/TagButton";
 
 const RecipeForm = ({
   recipeName,
@@ -31,6 +32,9 @@ const RecipeForm = ({
   tags,
   tagsError,
   handleTagChange,
+  handleTagCategoryChange,
+  activeTagCategory,
+  availableTags,
   removeTag,
   maxTags,
   extraImages,
@@ -41,6 +45,8 @@ const RecipeForm = ({
   maxExtraImages,
   handleSubmit,
   isSubmitting,
+  isLoading,
+  tagCategories,
 }) => {
   const isTagLimitReached = tags.length >= maxTags;
   const isStepLimitReached = stepFields.length >= maxSteps;
@@ -48,58 +54,152 @@ const RecipeForm = ({
   const isIngredientLimitReached = ingredientFields.length >= maxIngredients;
   const isIngredientMinReached = ingredientFields.length == 1;
   const isExtraImageLimitReached = extraImages.length >= maxExtraImages;
+  
+  // Group tags by category for better organization in the UI
+  const tagsByCategory = useMemo(() => {
+    const grouped = {};
+    tags.forEach(tag => {
+      if (!grouped[tag.category]) {
+        grouped[tag.category] = [];
+      }
+      grouped[tag.category].push(tag);
+    });
+    return grouped;
+  }, [tags]);
+  
+  const formProgress = useMemo(() => {
+    let completed = 0;
+    let total = 6; // Name, Image, Description, Ingredients, Steps, Tags
+    
+    if (recipeName.trim()) completed++;
+    if (imageBase64) completed++;
+    if (description.trim()) completed++;
+    if (ingredientFields.length > 0 && ingredientFields.every(ing => ing.name && ing.quantity && ing.measurement)) completed++;
+    if (stepFields.length > 0 && stepFields.every(step => step.description)) completed++;
+    if (tags.length > 0) completed++;
+    
+    return Math.floor((completed / total) * 100);
+  }, [recipeName, imageBase64, description, ingredientFields, stepFields, tags]);
+  
   return (
     <form
-      onSubmit={handleSubmit}
+      onSubmit={(e) => {
+        e.preventDefault();
+        handleSubmit(e);
+      }}
       className="max-w-screen-2xl lg:max-w-screen-lg mb-20 mx-auto"
     >
-      <RecipeInput
-        label="Recipe Name"
-        type="text"
-        value={recipeName}
-        onChange={handleRecipeNameChange}
-        error={recipeNameError}
-        placeholder="Enter recipe name"
-      />
-      <div className="mb-4">
-        <label className="block text-[#D9D9D9] text-lg mb-2">
-          Recipe Image
-        </label>
-        <input
-          type="file"
-          accept="image/*"
-          onChange={(e) => handleImageChange(e.target.files[0])}
-          className="w-full border rounded-md py-2 px-4 bg-transparent text-[#D9D9D9] focus:outline-none focus:border-blue-500 ${imageError ? 'border-red-500' : 'border-gray-300'}"
-          required
-        />
-        {imageError && (
-          <span className="block text-red-500 text-sm mt-1 bg-red-100 border border-red-400 rounded-md py-1 px-3">
-            {imageError}
-          </span>
-        )}
-        {imageBase64 && (
-
-          <div className="mt-2">
-            <img
-              src={imageBase64}
-              alt="Recipe"
-              className="max-w-[200px] max-h-[200px] object-cover rounded-md"
+      <h1 className="text-[#D9D9D9] text-3xl font-bold text-center mb-2 tracking-wide">
+        Create Your Recipe
+      </h1>
+      
+      {/* Progress indicator */}
+      <div className="mb-8 w-full bg-gray-800 rounded-full h-2.5">
+        <div 
+          className="bg-orange-600 h-2.5 rounded-full transition-all duration-300 ease-out" 
+          style={{ width: `${formProgress}%` }}
+        ></div>
+        <div className="text-center text-sm text-gray-400 mt-1">
+          {formProgress < 100 ? `${formProgress}% Complete` : "Ready to submit!"}
+        </div>
+      </div>
+      
+      {/* Recipe Name & Image section */}
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-6">
+        <div>
+          <RecipeInput
+            label="Recipe Name"
+            type="text"
+            value={recipeName}
+            onChange={handleRecipeNameChange}
+            error={recipeNameError}
+            placeholder="Enter recipe name"
+          />
+          
+          <RecipeInput
+            label="Description"
+            type="textarea"
+            value={description}
+            onChange={handleDescriptionChange}
+            error={descriptionError}
+            placeholder="Enter description"
+            className="mt-4"
+          />
+        </div>
+        
+        <div className="mb-4">
+          <label className="block text-[#D9D9D9] text-lg mb-2">
+            Recipe Image
+          </label>
+          
+          <div className={`border-2 border-dashed rounded-lg p-4 text-center transition-all duration-200 
+            ${imageBase64 ? 'border-green-600' : 'border-gray-600 hover:border-orange-600'}`}>
+            {imageBase64 ? (
+              <div className="relative group">
+                <img
+                  src={imageBase64}
+                  alt="Recipe"
+                  className="max-h-[200px] mx-auto object-cover rounded-md"
+                />
+                <div className="absolute inset-0 bg-black bg-opacity-50 opacity-0 group-hover:opacity-100 flex items-center justify-center transition-opacity rounded-md">
+                  <button
+                    type="button"
+                    className="bg-orange-600 text-white px-3 py-1 rounded-md"
+                    onClick={() => document.getElementById('recipeImageInput').click()}
+                  >
+                    Change Image
+                  </button>
+                </div>
+              </div>
+            ) : (
+              <div className="py-8 text-center">
+                <p className="text-gray-400 mb-2">Drag and drop your image here or click to browse</p>
+                <button
+                  type="button"
+                  className="bg-orange-600 text-white px-4 py-2 rounded-md mt-2"
+                  onClick={() => document.getElementById('recipeImageInput').click()}
+                >
+                  Upload Image
+                </button>
+              </div>
+            )}
+            <input
+              id="recipeImageInput"
+              type="file"
+              accept="image/*"
+              onChange={(e) => handleImageChange(e.target.files[0])}
+              className="hidden"
             />
           </div>
-        )}
+          
+          {imageError && (
+            <div className="text-red-500 text-sm mt-1 bg-red-100 border border-red-400 rounded-md py-1 px-3">
+              {imageError}
+            </div>
+          )}
+        </div>
       </div>
-      <RecipeInput
-        label="Description"
-        type="textarea"
-        value={description}
-        onChange={handleDescriptionChange}
-        error={descriptionError}
-        placeholder="Enter description"
-      />
-      <div className="mb-4">
-        <label className="block text-[#D9D9D9] text-lg mb-2">Ingredients</label>
+      
+      {/* Ingredients Section */}
+      <div className="bg-gray-800 rounded-lg p-4 mb-6">
+        <div className="flex justify-between items-center mb-3">
+          <label className="text-[#D9D9D9] text-lg font-medium">Ingredients</label>
+          {!isIngredientLimitReached && (
+            <button
+              type="button"
+              onClick={handleAddIngredient}
+              className="bg-gray-700 hover:bg-gray-600 text-gray-300 rounded-full p-1 transition-colors"
+            >
+              <IoMdAddCircle className="text-xl" />
+            </button>
+          )}
+        </div>
+        
         {ingredientFields.map((ingredient, index) => (
-          <div key={index} className="flex items-center gap-2 mb-2">
+          <div key={index} className="flex items-center gap-2 mb-3 bg-gray-700 p-3 rounded-md transition-all">
+            <div className="bg-gray-800 text-gray-300 h-6 w-6 flex items-center justify-center rounded-full mr-1">
+              {index + 1}
+            </div>
             <RecipeInput
               type="text"
               value={ingredient.name}
@@ -119,7 +219,7 @@ const RecipeForm = ({
               }}
               error={ingredientErrors[index]?.quantity}
               placeholder="Quantity"
-              className="flex-1"
+              className="w-[100px]"
             />
             <RecipeInput
               type="select"
@@ -133,36 +233,61 @@ const RecipeForm = ({
               }))}
               error={ingredientErrors[index]?.measurement}
               placeholder="Measurement"
-              className="flex-1"
+              className="w-[180px]"
             />
-            {!isIngredientMinReached && <button
-              type="button"
-              onClick={() => handleRemoveIngredient(index)}
-              className="text-red-500 hover:text-red-700 focus:outline-none mb-3"
-            >
-              <FaMinusCircle className="text-gray-500" />
-            </button>}
+            {!isIngredientMinReached && (
+              <button
+                type="button"
+                onClick={() => handleRemoveIngredient(index)}
+                className="text-gray-400 hover:text-red-500 focus:outline-none transition-colors"
+              >
+                <FaMinusCircle className="text-lg" />
+              </button>
+            )}
           </div>
         ))}
-        {isIngredientLimitReached ? (
+        
+        {isIngredientLimitReached && (
           <p className="text-yellow-500 text-sm mt-1">
-            You've reached the maximum of {maxIngredients} Ingredients.
+            You've reached the maximum of {maxIngredients} ingredients.
           </p>
-        ) : (
-          <button
-            type="button"
-            onClick={handleAddIngredient}
-            className="text-blue-500 hover:text-blue-700 focus:outline-none mt-2"
-          >
-            <IoMdAddCircle className="text-gray-400" />
-          </button>
         )}
       </div>
-      <div className="mb-4">
-        <label className="block text-[#CCCCCC] text-lg mb-2">Steps</label>
+      
+      {/* Cooking Steps Section */}
+      <div className="bg-gray-800 rounded-lg p-4 mb-6">
+        <div className="flex justify-between items-center mb-3">
+          <label className="text-[#CCCCCC] text-lg font-medium">Cooking Steps</label>
+          {!isStepLimitReached && (
+            <button
+              type="button"
+              onClick={handleAddStep}
+              className="bg-gray-700 hover:bg-gray-600 text-gray-300 rounded-full p-1 transition-colors"
+            >
+              <IoMdAddCircle className="text-xl" />
+            </button>
+          )}
+        </div>
+        
         {stepFields.map((step, index) => (
-          <div key={index} className="mb-2">
-            <div className="flex items-stretch gap-3">
+          <div key={index} className="mb-3 bg-gray-700 p-3 rounded-md">
+            <div className="flex items-center mb-2">
+              <div className="bg-gray-800 text-gray-300 h-6 w-6 flex items-center justify-center rounded-full mr-2">
+                {index + 1}
+              </div>
+              <div className="text-gray-300 font-medium">Step {index + 1}</div>
+              {!isStepMinReached && (
+                <button
+                  type="button"
+                  onClick={() => handleRemoveStep(index)}
+                  className="ml-auto text-gray-400 hover:text-red-500 focus:outline-none transition-colors"
+                >
+                  <FaMinusCircle className="text-lg" />
+                </button>
+              )}
+            </div>
+            
+            <div className="flex flex-col md:flex-row gap-3">
               <RecipeInput
                 type="textarea"
                 value={step.description}
@@ -170,135 +295,157 @@ const RecipeForm = ({
                   handleStepChange(index, "description", e.target.value)
                 }
                 error={stepErrors[index]}
-                placeholder={`Step ${index + 1} description`}
-                className="flex-grow h-full"
+                placeholder={`Describe step ${index + 1}`}
+                className="flex-grow"
               />
-              <button
-                type="button"
-                className="border rounded-md h-full py-5 px-4 bg-transparent text-[#CCCCCC] hover:border-blue-500 focus:outline-none"
-                onClick={(e) => {
-                  fileInputRefs.current[index].click()
-                }}
-              >
-                {step.imageName || "Upload Image"}
-              </button>
-              <input
-                type="file"
-                accept="image/*"
-                ref={(el) => fileInputRefs.current[index] = el}
-                onChange={(e) => {
-                  handleStepChange(index, "image", e.target.files[0])
-                }}
-                key={`file-input-${index}-${Date.now()}`}
-                className="hidden"
-              />
-              {!isStepMinReached && <button
-                type="button"
-                onClick={() => handleRemoveStep(index)}
-                className="text-red-500 hover:text-red-700 focus:outline-none mb-3"
-              >
-                <FaMinusCircle className="text-gray-500" />
-              </button>}
-            </div>
-            {/* {step.image && <img src={URL.createObjectURL(step.image)} alt={`Step ${index + 1}`} className="mt-2 max-w-full h-auto" />} */}
-          </div>
-        ))}
-        {isStepLimitReached ? (
-          <p className="text-yellow-500 text-sm mt-1">
-            You've reached the maximum of {maxSteps} Steps.
-          </p>
-        ) : (
-          <button
-            type="button"
-            onClick={handleAddStep}
-            className="text-blue-500 hover:text-blue-700 focus:outline-none"
-          >
-            <IoMdAddCircle className="text-gray-400" />
-          </button>
-        )}
-      </div>
-
-      <div className="mb-4">
-        <label className="block text-[#D9D9D9] text-lg mb-2">Tags</label>
-        <RecipeInput
-          type="select"
-          value=""
-          onChange={handleTagChange}
-          options={foodTags.map((tag) => ({ label: tag, value: tag }))}
-          error={tagsError}
-          placeholder={isTagLimitReached ? "Max tags reached" : "Select a tag"}
-          disabled={isTagLimitReached}
-        />
-        {isTagLimitReached && (
-          <p className="text-yellow-500 text-sm mt-1">
-            You've reached the maximum of {maxTags} tags.
-          </p>
-        )}
-        <div className="flex flex-wrap mt-2">
-          {tags.map((tag, index) => (
-            <div
-              key={index}
-              className="bg-gray-200 text-gray-700 px-2 py-1 rounded-full mr-2 mb-2 flex items-center"
-            >
-              {tag.tag}
-              <button
-                type="button"
-                onClick={() => removeTag(index)}
-                className="ml-2 text-red-500 hover:text-red-700 focus:outline-none"
-              >
-                <FaMinusCircle size={12} />
-              </button>
-            </div>
-          ))}
-        </div>
-      </div>
-      <div className="mb-4">
-        <label className="block text-[#D9D9D9] text-lg mb-2">
-          Extra Images
-        </label>
-        {extraImages.map((extraImage, index) => (
-          <div key={index} className="flex items-center gap-2 mb-2">
-            <input
-              type="file"
-              accept="image/*"
-              onChange={(e) => handleExtraImageChange(index, e.target.files[0])}
-              className="w-full border rounded-md py-2 px-4 bg-transparent text-[#D9D9D9] focus:outline-none focus:border-blue-500"
-              required
-            />
-            {extraImage.image && (
-              <div className="relative w-32 h-10">
-                <img
-                  src={extraImage.image}
-                  alt="Uploaded"
-                  className="absolute inset-0 w-full h-full object-contain"
-                />
+              
+              <div className="w-full md:w-1/4">
+                <div 
+                  onClick={() => fileInputRefs.current[index].click()}
+                  className={`cursor-pointer border-2 border-dashed rounded-md p-2 h-full flex flex-col items-center justify-center transition-all
+                    ${step.stepImage ? 'border-green-600' : 'border-gray-600 hover:border-orange-600'}`}
+                >
+                  {step.stepImage ? (
+                    <div className="relative w-full h-24">
+                      <img 
+                        src={step.stepImage} 
+                        alt={`Step ${index + 1}`}
+                        className="max-h-[200px] mx-auto object-cover rounded-md"
+                      />
+                    </div>
+                  ) : (
+                    <div className="py-8 text-center">
+                      <p className="text-gray-400 mb-2">Drag and drop your image here or click to browse</p>
+                      <button
+                        type="button"
+                        className="bg-orange-600 text-white px-4 py-2 rounded-md mt-2"
+                        onClick={() => fileInputRefs.current[index].click()}
+                      >
+                        Upload Image
+                      </button>
+                    </div>
+                  )}
+                </div>
               </div>
-            )}
-            <button type="button" onClick={() => handleRemoveExtraImage(index)}>
-              <FaMinusCircle className="text-gray-500" />
-            </button>
+            </div>
           </div>
         ))}
-        {isExtraImageLimitReached ? (
-          <p className="text-yellow-500 text-sm mt-1">
-            You've reached the maximum of {maxExtraImages} extra images.
-          </p>
+      </div>
+      
+      {/* Tags Section */}
+      <div className="bg-gray-800 rounded-lg p-4 mb-6">
+        <div className="flex justify-between items-center mb-3">
+          <label className="text-[#D9D9D9] text-lg font-medium">Tags</label>
+          <div className="text-sm text-gray-400">
+            <FaTags className="inline mr-1" /> {tags.length}/{maxTags}
+          </div>
+        </div>
+        
+        {isLoading ? (
+          <div className="flex items-center justify-center py-8 text-[#D9D9D9]">
+            <div className="animate-spin rounded-full h-6 w-6 border-t-2 border-b-2 border-orange-500 mr-2"></div>
+            Loading tags...
+          </div>
         ) : (
-          <button
-            type="button"
-            onClick={handleAddExtraImage}
-            className="text-blue-500 hover:text-blue-700 focus:outline-none mt-2"
-          >
-            <IoMdAddCircle className="text-gray-400" />
-          </button>
+          <>
+            {/* Selected tags display */}
+            <div className="mb-4">
+              <div className="flex flex-wrap gap-2 mt-2">
+                {tags.length > 0 ? (
+                  tags.map((tag, idx) => (
+                    <div
+                      key={idx}
+                      className="bg-orange-600 text-white px-3 py-1 rounded-full flex items-center"
+                    >
+                      {tag.name}
+                      <div
+                        onClick={() => {
+                          console.log("Remove tag at index", idx);
+                          removeTag(idx);
+                        }}
+                        className="ml-2 text-white hover:text-red-200 cursor-pointer"
+                      >
+                        ×
+                      </div>
+                    </div>
+                  ))
+                ) : (
+                  <div className="text-gray-500 text-sm">
+                    <FaTag className="inline mr-2" /> Select tags to categorize your recipe
+                  </div>
+                )}
+              </div>
+              
+              {tagsError && (
+                <div className="text-red-500 text-sm mt-1 bg-red-100 bg-opacity-20 border border-red-400 rounded-md py-1 px-3">
+                  {tagsError}
+                </div>
+              )}
+            </div>
+            
+            {/* Category Tabs */}
+            <div className="flex flex-wrap mb-3 gap-1 border-b border-gray-700 pb-2">
+              {tagCategories && tagCategories.map(category => (
+                <div
+                  key={category}
+                  onClick={() => {
+                    console.log("Change category to", category);
+                    handleTagCategoryChange(category);
+                  }}
+                  className={`px-3 py-1 rounded-full text-sm font-medium transition-colors cursor-pointer ${
+                    activeTagCategory === category
+                    ? 'bg-orange-600 text-white'
+                    : 'bg-gray-700 text-gray-300 hover:bg-gray-600'
+                  }`}
+                >
+                  {TAG_CATEGORIES[category]?.icon} {TAG_CATEGORIES[category]?.label}
+                </div>
+              ))}
+            </div>
+            
+            {/* Tag options for selected category */}
+            <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-2 mb-3">
+              {availableTags[activeTagCategory]?.map(tag => {
+                const isSelected = tags.some(t => t._id === tag._id);
+                const isDisabled = isTagLimitReached && !isSelected;
+                
+                return (
+                  <div
+                    key={tag._id}
+                    onClick={() => {
+                      if (!isDisabled) {
+                        console.log("Select tag:", tag.name, tag._id);
+                        handleTagChange(tag._id);
+                      }
+                    }}
+                    className={`px-3 py-2 rounded-md text-sm font-medium transition-colors ${
+                      isSelected
+                        ? 'bg-orange-600 text-white cursor-pointer'
+                        : isDisabled
+                          ? 'bg-gray-700 text-gray-500 cursor-not-allowed'
+                          : 'bg-gray-700 text-gray-300 hover:bg-gray-600 cursor-pointer'
+                      }`}
+                  >
+                    {tag.name}
+                  </div>
+                );
+              })}
+              
+              {!availableTags[activeTagCategory]?.length && (
+                <div className="text-gray-400 col-span-full p-4 text-center">
+                  No tags available in this category
+                </div>
+              )}
+            </div>
+            
+            {isTagLimitReached && (
+              <p className="text-yellow-500 text-sm mt-1">
+                You've reached the maximum of {maxTags} tags.
+              </p>
+            )}
+          </>
         )}
       </div>
-      <button
-        type="submit"
-        className="bg-[#D9D9D9] text-black py-2 px-4 rounded-md hover:bg-gray-400 focus:outline-none"
-      >
-        {isSubmitting ? "Submitting..." : "Add Recipe"}
-      </button>
     </form>
   );
 };

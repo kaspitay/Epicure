@@ -25,11 +25,19 @@ const stepsSchema = new Schema({
 });
 
 const tagsSchema = new Schema({
-  tag:{
+  tag: {
     type: String,
     required: true
   },
-  // You can add more fields as needed, such as unit of measurement, notes, etc.
+  _id: {
+    type: Schema.Types.ObjectId,
+    ref: "Tag",
+    required: false
+  },
+  category: {
+    type: String,
+    required: false
+  }
 });
 
 const photosSchema = new Schema({

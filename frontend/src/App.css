@@ -5,9 +5,10 @@ body {
   padding: 0;
   width: 100%;
   height: 100%;
-  overflow: hidden; /* Prevents scrolling during loading */
-  /* font-family: "San Francisco"; */
-  /* font-weight: 700; */
+  overflow-x: hidden;
+  font-family: "San Francisco", -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
 }
 
 .loading-spinner-container {
@@ -87,8 +88,171 @@ body {
   }
 }
 
+/* Sidebar Link Styles */
+.sidebar-link-div {
+  @apply flex items-center px-4 py-2.5 rounded-lg transition-all duration-200 cursor-pointer;
+  @apply hover:bg-[#BE6F50] hover:bg-opacity-10;
+}
+
+/* Scrollbar Styles */
+.scrollbar-thin::-webkit-scrollbar {
+  width: 4px;
+}
+
+.scrollbar-thin::-webkit-scrollbar-track {
+  @apply bg-transparent;
+}
+
+.scrollbar-thin::-webkit-scrollbar-thumb {
+  @apply rounded-full bg-[#BE6F50]/50;
+  @apply hover:bg-[#BE6F50];
+}
+
+/* Transitions */
+.transition-all {
+  transition-property: all;
+  transition-timing-function: cubic-bezier(0.4, 0, 0.2, 1);
+  transition-duration: 200ms;
+}
+
+/* Loading Spinner */
+.loading-spinner {
+  @apply w-8 h-8 border-4 border-[#BE6F50] border-t-transparent rounded-full animate-spin;
+}
+
+/* Card Styles */
+.card {
+  @apply bg-[#1E1C1A] rounded-lg shadow-lg overflow-hidden;
+  @apply transition-all duration-300 hover:shadow-xl;
+  @apply border border-[#BE6F50]/10;
+}
+
+/* Button Styles */
+.btn-primary {
+  @apply px-4 py-2 rounded-lg bg-[#BE6F50] text-white font-medium;
+  @apply transition-all duration-200 hover:bg-[#BE6F50]/90;
+}
+
+.btn-secondary {
+  @apply px-4 py-2 rounded-lg bg-[#1E1C1A] text-white font-medium;
+  @apply border border-[#BE6F50]/20;
+  @apply transition-all duration-200 hover:bg-[#BE6F50]/10;
+}
+
+/* Input Styles */
+.input-field {
+  @apply w-full px-4 py-2 rounded-lg bg-[#1E1C1A] text-white;
+  @apply border border-[#BE6F50]/20 focus:border-[#BE6F50];
+  @apply transition-all duration-200 focus:ring-2 focus:ring-[#BE6F50]/20;
+  @apply placeholder:text-gray-400;
+}
+
+/* Animation Keyframes */
+@keyframes fadeIn {
+  from {
+    opacity: 0;
+    transform: translateY(10px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+@keyframes slideIn {
+  from {
+    transform: translateX(-100%);
+  }
+  to {
+    transform: translateX(0);
+  }
+}
+
+/* Utility Classes */
+.animate-fade-in {
+  animation: fadeIn 0.3s ease-out forwards;
+}
+
+.animate-slide-in {
+  animation: slideIn 0.3s ease-out forwards;
+}
+
+/* Responsive Design */
+@media (max-width: 768px) {
+  .sidebar-link-div {
+    @apply py-2;
+  }
+  
+  .card {
+    @apply hover:shadow-lg;
+  }
+}
+
+/* Font Face */
 @font-face {
   font-family: "San Francisco";
   font-weight: 400;
   src: url("https://applesocial.s3.amazonaws.com/assets/styles/fonts/sanfrancisco/sanfranciscodisplay-regular-webfont.woff");
+}
+
+/* Search Bar Styles */
+.search-bar {
+  @apply relative w-full;
+}
+
+.search-input {
+  @apply w-full px-4 py-2 rounded-lg bg-[#2A2826] text-white;
+  @apply border border-[#BE6F50]/20 focus:border-[#BE6F50];
+  @apply focus:ring-2 focus:ring-[#BE6F50]/20;
+  @apply transition-all duration-200;
+  @apply placeholder:text-gray-400;
+}
+
+/* Tag Styles */
+.tag {
+  @apply px-3 py-1 rounded-full text-sm transition-all duration-200;
+  @apply cursor-pointer;
+}
+
+.tag-selected {
+  @apply bg-[#BE6F50] text-white;
+}
+
+.tag-unselected {
+  @apply bg-[#1E1C1A] text-[#BE6F50] border border-[#BE6F50]/20;
+  @apply hover:bg-[#BE6F50] hover:bg-opacity-10;
+}
+
+/* Loading States */
+.loading-overlay {
+  @apply fixed inset-0 bg-[#0A0A0A]/80 backdrop-blur-sm z-50;
+  @apply flex items-center justify-center;
+}
+
+.loading-spinner {
+  @apply w-12 h-12 border-4 border-[#BE6F50] border-t-transparent rounded-full;
+  @apply animate-spin;
+}
+
+/* Sidebar Collapse Animation */
+.sidebar-collapse {
+  @apply transition-all duration-300 ease-in-out;
+}
+
+/* Dropdown Styles */
+.dropdown {
+  @apply absolute z-50 mt-2 w-full bg-[#2A2826] rounded-lg shadow-lg;
+  @apply border border-[#BE6F50]/20;
+  @apply animate-fade-in;
+}
+
+/* Responsive Design */
+@media (max-width: 768px) {
+  .search-bar {
+    @apply px-2;
+  }
+  
+  .tag {
+    @apply text-xs px-2 py-0.5;
+  }
 }

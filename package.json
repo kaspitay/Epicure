@@ -2,5 +2,8 @@
   "dependencies": {
     "@splidejs/react-splide": "^0.7.12",
     "axios": "^1.6.8"
+  },
+  "scripts": {
+    "seed-tags": "cd backend && node utils/seedTags.js"
   }
 }

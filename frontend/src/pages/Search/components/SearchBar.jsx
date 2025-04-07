@@ -2,19 +2,15 @@ import { FaSearch } from "react-icons/fa";
 
 const SearchBar = ({ value, onChange, placeholder }) => {
   return (
-    <div className="flex items-center justify-center mb-5 lg:mb-5 ">
-      <div className="flex items-center justify-center w-full h-[50px] rounded-lg px-3 relative">
-        <input
-          type="text"
-          placeholder={placeholder}
-          className="w-full lg:h-5 xl:h-10 px-10 mx-5 py-3 rounded-lg bg-white outline-none text-gray-800 placeholder-gray-500"
-          value={value}
-          onChange={onChange}
-        />
-        <div className="absolute top-[50%] right-[6%] transform -translate-y-1/2">
-          <FaSearch className="text-2xl text-gray-500 cursor-pointer" />
-        </div>
-      </div>
+    <div className="relative w-full">
+      <input
+        type="text"
+        value={value}
+        onChange={onChange}
+        placeholder={placeholder}
+        className="w-full px-4 py-2 pl-10 pr-4 rounded-lg bg-[#2A2826] text-white placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-[#BE6F50]"
+      />
+      <FaSearch className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400" />
     </div>
   );
 };

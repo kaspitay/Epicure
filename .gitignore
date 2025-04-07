@@ -1,3 +1,4 @@
+Epicure\.gitignore
 # Logs
 logs
 *.log
@@ -22,3 +23,52 @@ dist-ssr
 *.njsproj
 *.sln
 *.sw?
+
+# Environment variables and secrets
+.env
+.env.*
+!.env.example
+
+# Large files and uploads
+/backend/uploads
+/uploads
+*.zip
+*.gz
+*.tar
+*.rar
+*.7z
+
+# AWS credentials and config
+.aws
+aws-config.json
+
+# Cache and temporary files
+.cache/
+.temp/
+coverage/
+.nyc_output/
+
+# Database files
+*.sqlite
+*.db
+mongo-data/
+
+# IDE specific files
+.vscode/*
+!.vscode/extensions.json
+!.vscode/launch.json
+!.vscode/settings.json
+
+# Build output
+/frontend/dist
+/backend/dist
+/dist
+
+# Sensitive data
+**/credentials.*
+**/secrets.*
+**/private.*
+**/*password*
+**/*key*
+**/*secret*
+**/*token*

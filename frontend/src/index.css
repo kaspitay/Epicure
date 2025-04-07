@@ -13,7 +13,7 @@ body {
 }
 
 .sidebar-link-div {
-  @apply flex items-center px-2;
+  @apply flex items-center px-2 py-2 rounded-md hover:bg-[#BE6F50]/10 transition-all duration-200;
 }
 
 .single-recipe-img {
@@ -34,4 +34,65 @@ body {
 
 .sidebar-link {
   @apply text-white bg-[#272727] px-4 rounded-lg drop-shadow-lg flex items-center justify-center;
+}
+
+/* Sidebar icon styles */
+.sidebar-icon-container {
+  @apply mb-4 cursor-pointer transition-all duration-200;
+}
+
+.sidebar-icon {
+  @apply w-10 h-10 rounded-full bg-[#BE6F50]/10 flex items-center justify-center text-[#BE6F50] 
+  hover:bg-[#BE6F50]/20 transition-all duration-200 hover:scale-110;
+}
+
+/* Explicitly ensure menu icons are visible */
+.sidebar-link-div svg {
+  @apply block flex-shrink-0;
+}
+
+/* Better text readability styles */
+.recipe-title {
+  @apply mt-2 font-medium text-base text-white line-clamp-2 w-full leading-tight tracking-wide;
+  text-shadow: 0 1px 2px rgba(0, 0, 0, 0.5);
+}
+
+.recipe-tag {
+  @apply text-xs px-2 py-0.5 rounded-full text-white font-medium shadow-sm;
+}
+
+.recipe-tag-popular {
+  @apply bg-amber-500/90;
+}
+
+.recipe-tag-regular {
+  @apply bg-[#BE6F50]/90;
+}
+
+.recipe-card {
+  @apply overflow-hidden rounded-lg shadow-md hover:shadow-lg transition-all duration-300;
+}
+
+.recipe-card:hover .recipe-title {
+  @apply text-[#BE6F50];
+}
+
+.tag-gradient {
+  @apply absolute bottom-0 left-0 right-0 bg-gradient-to-t from-black/80 to-transparent p-2 pt-8;
+}
+
+.tag-container {
+  @apply flex flex-wrap gap-1;
+}
+
+.category-button {
+  @apply px-3 py-2 rounded-md text-sm font-medium transition-all duration-200 flex items-center gap-2;
+}
+
+.category-button-active {
+  @apply bg-[#3D3A36] text-white border-l-4 border-[#BE6F50];
+}
+
+.category-button-inactive {
+  @apply bg-[#1E1C1A] text-gray-200 hover:bg-[#2A2826] hover:border-l-4 hover:border-[#BE6F50]/40;
 }
