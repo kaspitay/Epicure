@@ -8,6 +8,7 @@ const mongoose = require("mongoose");
 
 const recipeRoutes = require("./routes/recipe");
 const userRoutes = require("./routes/user");
+const tagRoutes = require("./routes/tag");
 
 //cors
 const cors = require("cors");
@@ -26,8 +27,9 @@ app.get("/test-compression", (req, res) => {
 });
 //routes
 
-app.use("/recipe", recipeRoutes);
-app.use("/user", userRoutes);
+app.use("/api/recipe", recipeRoutes);
+app.use("/api/user", userRoutes);
+app.use("/api/tags", tagRoutes);
 
 //connect to db
 console.log(MONGO);

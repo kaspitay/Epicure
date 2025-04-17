@@ -9,7 +9,7 @@ import { useState } from "react";
 import axios from "axios";
 import BASE_URL from "./../../config"; // Adjust the path as needed
 
-export default function CookBooks() {
+export default function CookBooks({ isExpanded = true }) {
   const { user } = useAuthContext();
   const { dispatch } = useAuthContext();
   const navigate = useNavigate();
@@ -100,10 +100,9 @@ export default function CookBooks() {
           : cookbook.name;
 
       return (
-        <div className="sidebar-link">
+        <div className="sidebar-link" key={`cookbook-${cookbook._id}`}>
           <Link
             to={`/cook_books/${cookbook._id}/${cookbook.name}`}
-            key={`cookbook-${cookbook._id}`}
             className="sidebar-link"
           >
             {truncatedName}
@@ -116,6 +115,10 @@ export default function CookBooks() {
     });
     return [...cookbookLinks];
   };
+
+  if (!isExpanded) {
+    return null; // Don't render anything when collapsed
+  }
 
   return (
     <div className="row-span-4 w-full bg-[#1E1C1A] rounded-lg py-5 px-4">

@@ -1,98 +1,173 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
+import { motion } from "framer-motion";
 import { BiSolidLogIn } from "react-icons/bi";
 import { RiLogoutBoxFill } from "react-icons/ri";
 import { FaHome, FaSearch } from "react-icons/fa";
-import { Link } from "react-router-dom";
+import { Link, useLocation, useNavigate } from "react-router-dom";
 import { IoIosCreate } from "react-icons/io";
 import { useAuthContext } from "../../hooks/useAuthContext";
 import { useLogout } from "../../hooks/useLogout";
-export default function Menu() {
-  const [isUserLoggedIn, setIsUserLoggedIn] = useState(false); // Default user is logged in
+import ConfirmDialog from "../../components/common/ConfirmDialog";
+
+export default function Menu({ isExpanded, expandSidebar }) {
   const { user } = useAuthContext();
   const creatorid = user ? user.user._id : null;
   const { logout } = useLogout();
-  // Function to toggle user login status
-  const toggleUserLogin = () => {
-    setIsUserLoggedIn(!isUserLoggedIn);
+  const location = useLocation();
+  const navigate = useNavigate();
+  const [searchQuery, setSearchQuery] = useState("");
+  const [selectedTags, setSelectedTags] = useState([]);
+  const [showTagDropdown, setShowTagDropdown] = useState(false);
+  const [showLogoutConfirm, setShowLogoutConfirm] = useState(false);
+
+  const handleLogOutClick = () => {
+    setShowLogoutConfirm(true);
   };
-  const handleLogOut = (e) => {
+
+  const confirmLogout = () => {
     logout();
+    setShowLogoutConfirm(false);
   };
+
+  const cancelLogout = () => {
+    setShowLogoutConfirm(false);
+  };
+
+  const isActive = (path) => {
+    return location.pathname === path;
+  };
+
+  const handleSearch = (e) => {
+    e.preventDefault();
+    if (searchQuery.trim() || selectedTags.length > 0) {
+      const queryParams = new URLSearchParams();
+      if (searchQuery.trim()) queryParams.append('q', searchQuery.trim());
+      if (selectedTags.length > 0) queryParams.append('tags', selectedTags.join(','));
+      navigate(`/search?${queryParams.toString()}`);
+    }
+  };
+
+  const menuItems = [
+    { path: "/", icon: FaHome, label: "Home", show: !!user },
+    { path: "/search", icon: FaSearch, label: "Search", show: !!user },
+    { 
+      path: `/creator/${creatorid}`, 
+      icon: IoIosCreate, 
+      label: "My Kitchen", 
+      show: user?.user?.userType === 1 
+    }
+  ];
+
   return (
-    <div className="row-span-3   bg-[#1E1C1A] rounded-lg py-3 px-4">
-      <div className="h-full ">
-        {/* Logo */}
-        <div className="flex items-center mb-2">
-          {user ? (
-            user.user.userType === 1 ? (
-              <h1 className="text-[#BE6F50] text-[22px]">Epicure-Chef</h1>
-            ) : (
-              <h1 className="text-[#BE6F50] text-[22px]">Epicure</h1>
-            )
+    <>
+      <motion.div 
+        initial={{ opacity: 0, y: -20 }}
+        animate={{ opacity: 1, y: 0 }}
+        transition={{ delay: 0.1 }}
+        className={`bg-[#1E1C1A] rounded-lg py-4 ${isExpanded ? 'px-4' : 'px-2'}`}
+      >
+        <div className="h-full">
+          {/* Logo */}
+          {isExpanded ? (
+            <motion.div 
+              initial={{ scale: 0.9 }}
+              animate={{ scale: 1 }}
+              transition={{ type: "spring", stiffness: 200 }}
+              className="flex items-center mb-6"
+            >
+              {user ? (
+                user.user.userType === 1 ? (
+                  <h1 className="text-[#BE6F50] text-2xl font-bold tracking-wide">Epicure-Chef</h1>
+                ) : (
+                  <h1 className="text-[#BE6F50] text-2xl font-bold tracking-wide">Epicure</h1>
+                )
+              ) : (
+                <h1 className="text-[#BE6F50] text-2xl font-bold tracking-wide">Epicure</h1>
+              )}
+            </motion.div>
           ) : (
-            <h1 className="text-[#BE6F50] text-[22px]">Epicure</h1>
-          )}{" "}
-        </div>
-
-        <div className="overflow-y-scroll max-h-[70%]  scrollbar-none">
-          {/* Sidebar Links */}
-          {user && (
-            <Link to="/">
-              <div className="sidebar-link-div">
-                <FaHome className="w-5 h-5 mr-2 text-[#BE6F50]" />
-                <h1 className="flex items-center text-white px-4 py-1">Home</h1>
-              </div>
-            </Link>
+            <motion.div 
+              initial={{ scale: 0.9 }}
+              animate={{ scale: 1 }}
+              transition={{ type: "spring", stiffness: 200 }}
+              className="flex items-center justify-center mb-6"
+            >
+              <span className="text-[#BE6F50] text-2xl font-bold">E</span>
+            </motion.div>
           )}
 
-          {user && (
-            <Link to="/search">
-              <div className="sidebar-link-div">
-                <FaSearch className="w-5 h-5 mr-2 text-[#BE6F50]" />
-                <h1 className="flex items-center text-white px-4 py-1">
-                  Search
-                </h1>
-              </div>
-            </Link>
-          )}
-
-          {/* {user && user.user.userType === 1 ? ( */}
-          {user && user.user.userType === 1 ? (
-            <Link to={`/creator/${creatorid}`}>
-              <div className="sidebar-link-div">
-                <IoIosCreate className="w-5 h-5 mr-2 text-[#BE6F50]" />
-                <h1 className="flex text-[14px] items-center text-white px-4 py-1">
-                  My Kitchen
-                </h1>
-              </div>
-            </Link>
-          ) : null}
-
-          {/* Login/Logout Button */}
-          <div className="sidebar-link-div">
-            {user ? (
-              <div className="flex justify-center items-center">
-                <RiLogoutBoxFill className="w-5 h-5 mr-2 text-[#BE6F50]" />
-                <button
-                  className="flex items-center text-white px-4 py-1"
-                  onClick={handleLogOut}
+          <div className="space-y-2">
+            {/* Sidebar Links */}
+            {menuItems.map((item, index) => (
+              item.show && (
+                <motion.div
+                  key={item.path}
+                  initial={{ opacity: 0, x: -20 }}
+                  animate={{ opacity: 1, x: 0 }}
+                  transition={{ delay: 0.1 * index }}
                 >
-                  Log out
+                  <Link to={item.path} onClick={!isExpanded ? expandSidebar : undefined}>
+                    <div 
+                      className={`sidebar-link-div ${isActive(item.path) ? 'bg-[#BE6F50] bg-opacity-10' : ''} ${
+                        !isExpanded ? 'justify-center px-2 py-2' : ''
+                      }`}
+                      title={!isExpanded ? item.label : ''}
+                    >
+                      <item.icon className={`w-5 h-5 ${isExpanded ? 'mr-2' : ''} text-[#BE6F50]`} />
+                      {isExpanded && <span className="text-white font-medium">{item.label}</span>}
+                    </div>
+                  </Link>
+                </motion.div>
+              )
+            ))}
+
+            {/* Login/Logout Button */}
+            <motion.div 
+              className="mt-6"
+              initial={{ opacity: 0, y: 20 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ delay: 0.4 }}
+            >
+              {user ? (
+                <button
+                  onClick={handleLogOutClick}
+                  className={`w-full sidebar-link-div hover:bg-[#BE6F50] hover:bg-opacity-20 transition-colors duration-200 ${
+                    !isExpanded ? 'justify-center px-2 py-2' : ''
+                  }`}
+                  title={!isExpanded ? 'Log out' : ''}
+                >
+                  <div className={`flex items-center ${!isExpanded ? 'justify-center' : ''}`}>
+                    <RiLogoutBoxFill className={`w-5 h-5 ${isExpanded ? 'mr-2' : ''} text-[#BE6F50]`} />
+                    {isExpanded && <span className="text-white font-medium">Log out</span>}
+                  </div>
                 </button>
-              </div>
-            ) : (
-              <div className="flex justify-center items-center">
-                <BiSolidLogIn className="w-5 h-5 text-[#BE6F50]" />
-                <Link to="/login">
-                  <h1 className="flex items-center text-white ml-2 px-4 py-1 rounded-lg">
-                    LogIn
-                  </h1>
+              ) : (
+                <Link to="/login" className="block">
+                  <div className={`sidebar-link-div hover:bg-[#BE6F50] hover:bg-opacity-20 transition-colors duration-200 ${
+                    !isExpanded ? 'justify-center px-2 py-2' : ''
+                  }`}
+                  title={!isExpanded ? 'Login' : ''}
+                  >
+                    <div className={`flex items-center ${!isExpanded ? 'justify-center' : ''}`}>
+                      <BiSolidLogIn className={`w-5 h-5 ${isExpanded ? 'mr-2' : ''} text-[#BE6F50]`} />
+                      {isExpanded && <span className="text-white font-medium">Login</span>}
+                    </div>
+                  </div>
                 </Link>
-              </div>
-            )}
+              )}
+            </motion.div>
           </div>
         </div>
-      </div>
-    </div>
+      </motion.div>
+
+      {/* Logout Confirmation Dialog */}
+      <ConfirmDialog 
+        isOpen={showLogoutConfirm}
+        title="Confirm Logout"
+        message="Are you sure you want to log out?"
+        onConfirm={confirmLogout}
+        onCancel={cancelLogout}
+      />
+    </>
   );
 }

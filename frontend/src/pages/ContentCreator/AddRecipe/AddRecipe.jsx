@@ -1,9 +1,12 @@
-import { useState, useRef } from "react";
+import { useState, useRef, useEffect } from "react";
 import axios from "axios";
 import { useAuthContext } from "../../../hooks/useAuthContext";
 import { useRecipeContext } from "../../../context/RecipeContext";
 import BASE_URL from "./../../../config"; // Adjust the path as needed
 import RecipeForm from "../../../layout/components/RecipeForm";
+import TagSelector from "./TagSelector";
+// Import the tag categories from the centralized constants
+import { TAG_CATEGORIES } from "../../../constants";
 
 const AddRecipe = ({ onRecipeAdded }) => {
   const { user } = useAuthContext();
@@ -27,8 +30,11 @@ const AddRecipe = ({ onRecipeAdded }) => {
   ]);
   const [stepErrors, setStepErrors] = useState([]);
 
+  // Updated tag state to handle structured tags
   const [tags, setTags] = useState([]);
   const [tagsError, setTagsError] = useState("");
+  const [availableTags, setAvailableTags] = useState({});
+  const [activeTagCategory, setActiveTagCategory] = useState("dietary");
 
   const [extraImages, setExtraImages] = useState([]);
   const [extraImagesError, setExtraImagesError] = useState("");
@@ -38,6 +44,7 @@ const AddRecipe = ({ onRecipeAdded }) => {
 
   const fileInputRefs = useRef([]);
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [isLoading, setIsLoading] = useState(true);
 
   const MAX_RECIPE_NAME_LENGTH = 30;
   const MAX_DESCRIPTION_LENGTH = 1000;
@@ -49,6 +56,55 @@ const AddRecipe = ({ onRecipeAdded }) => {
   const MAX_TAGS = 5;
   const MAX_EXTRA_IMAGES = 4;
   const MAX_IMAGE_SIZE_MB = 5; // Maximum image size in megabytes
+
+  // Fetch available tags from the backend
+  useEffect(() => {
+    const fetchTags = async () => {
+      try {
+        setIsLoading(true);
+        const response = await axios.get(`${BASE_URL}/api/tags`);
+        console.log("API response tags:", response.data);
+        
+        // Organize tags by category
+        const tagsByCategory = {};
+        
+        // Initialize with empty arrays for each category to ensure all categories are shown
+        Object.keys(TAG_CATEGORIES).forEach(category => {
+          tagsByCategory[category] = [];
+        });
+        
+        // Add tags to their respective categories
+        response.data.forEach(tag => {
+          if (tag.category && tagsByCategory[tag.category]) {
+            tagsByCategory[tag.category].push(tag);
+          } else if (tag.category) {
+            // If category exists in tag but not in our predefined categories
+            tagsByCategory[tag.category] = [tag];
+          } else {
+            // Fallback for tags without category
+            if (!tagsByCategory['uncategorized']) {
+              tagsByCategory['uncategorized'] = [];
+            }
+            tagsByCategory['uncategorized'].push(tag);
+          }
+        });
+        
+        setAvailableTags(tagsByCategory);
+        setIsLoading(false);
+      } catch (error) {
+        console.error("Error fetching tags:", error);
+        // Provide fallback data in case of error
+        const fallbackTags = {};
+        Object.keys(TAG_CATEGORIES).forEach(category => {
+          fallbackTags[category] = [];
+        });
+        setAvailableTags(fallbackTags);
+        setIsLoading(false);
+      }
+    };
+    
+    fetchTags();
+  }, []);
 
   // Validate Recipe Name
   const validateRecipeName = (name) => {
@@ -271,66 +327,109 @@ const AddRecipe = ({ onRecipeAdded }) => {
   const handleAddStep = () => {
     setStepFields([
       ...stepFields,
-      { id: stepFields.length + 1, description: "", stepImage: null },
+      {
+        id: stepFields.length + 1,
+        description: "",
+        stepImage: null,
+        imageName: "Upload image",
+      },
     ]);
     setStepErrors([...stepErrors, ""]);
   };
 
   const handleRemoveStep = (index) => {
-    stepFields[index].stepImage = null;
-    const updatedFields = stepFields.filter((_, i) => i !== index);
-    const updatedErrors = stepErrors.filter((_, i) => i !== index);
-
-    const reindexedFields = updatedFields.map((field, i) => ({
-      ...field,
-      id: i + 1,
-    }));
-
-    setStepFields(reindexedFields);
-    setStepErrors(updatedErrors);
+    setStepFields((fields) => fields.filter((_, i) => i !== index));
+    setStepErrors((errors) => errors.filter((_, i) => i !== index));
   };
 
-  const handleTagChange = (e) => {
-    const value = e.target.value;
-    if (
-      value &&
-      !tags.some((tag) => tag.tag === value) &&
-      tags.length < MAX_TAGS
-    ) {
-      const newTags = [...tags, { id: tags.length + 1, tag: value }];
-      setTags(newTags);
-      validateTags(newTags);
+  // Updated tag handling functions
+  // Set active category
+  const handleTagCategoryChange = (category) => {
+    setActiveTagCategory(category);
+  };
+
+  // Handle tag selection - SIMPLIFIED VERSION
+  const handleTagChange = (tagId) => {
+    // Debug log
+    console.log("Tag clicked in handleTagChange:", tagId);
+    
+    // Check if tag is already selected (exists in tags array)
+    const tagExists = tags.some(tag => tag._id === tagId);
+    console.log("Tag exists in selection?", tagExists);
+    
+    if (tagExists) {
+      // Remove tag if already selected
+      const filteredTags = tags.filter(tag => tag._id !== tagId);
+      console.log("After removal:", filteredTags);
+      setTags(filteredTags);
+    } else {
+      // Add tag if not already selected
+      // Find the tag object in availableTags
+      let tagObject = null;
+      
+      // Check all categories
+      Object.values(availableTags).forEach(categoryTags => {
+        const found = categoryTags.find(tag => tag._id === tagId);
+        if (found) {
+          tagObject = found;
+        }
+      });
+      
+      if (!tagObject) {
+        console.error("Tag not found:", tagId);
+        return;
+      }
+      
+      // Check if we've hit the limit
+      if (tags.length >= MAX_TAGS) {
+        setTagsError(`You can only select up to ${MAX_TAGS} tags.`);
+        return;
+      }
+      
+      // Add the tag
+      console.log("Adding tag:", tagObject);
+      setTags([...tags, tagObject]);
     }
-    e.target.value = "";
+    
+    // Clear any error message
+    setTagsError("");
   };
 
+  // Remove a tag by index
   const removeTag = (index) => {
-    const newTags = tags.filter((_, i) => i !== index);
+    // Safety check
+    if (index < 0 || index >= tags.length) return;
+    
+    // Create a new array without the tag at the given index
+    const newTags = [...tags];
+    newTags.splice(index, 1);
+    
+    // Update tags
     setTags(newTags);
-    validateTags(newTags);
   };
 
   const handleExtraImageChange = (index, file) => {
     if (!file) return;
+    
+    if (!file.type.startsWith('image/')) {
+      alert("Please select an image file.");
+      return;
+    }
+
     if (!validateImageSize(file)) return;
+
     const reader = new FileReader();
     reader.onloadend = () => {
-      setExtraImages((images) => {
-        const updatedImages = [...images];
-        updatedImages[index] = { id: index + 1, image: reader.result }; // Update existing image object or add new one if it doesn't exist
-        return updatedImages;
-      });
+      const updatedImages = [...extraImages];
+      updatedImages[index] = { id: index + 1, file, base64: reader.result };
+      setExtraImages(updatedImages);
+      validateExtraImages(updatedImages);
     };
     reader.readAsDataURL(file);
   };
 
   const handleAddExtraImage = () => {
-    if (extraImages.length < MAX_EXTRA_IMAGES) {
-      setExtraImages([
-        ...extraImages,
-        { id: extraImages.length + 1, image: "" },
-      ]);
-    }
+    setExtraImages([...extraImages, { id: extraImages.length + 1 }]);
   };
 
   const handleRemoveExtraImage = (index) => {
@@ -338,120 +437,185 @@ const AddRecipe = ({ onRecipeAdded }) => {
   };
 
   const handleImageChange = (file) => {
-    if (file) {
-      if (!file.type.startsWith("image/")) {
-        setImageBase64("");
-        setImageError("Please select an image file.");
-        return;
-      }
-      if (!validateImageSize(file)) return;
-
-      const reader = new FileReader();
-      reader.onloadend = () => {
-        setImageBase64(reader.result);
-        setImageError("");
-      };
-      reader.readAsDataURL(file);
-    } else {
-      setImageBase64("");
+    if (!file) return;
+    
+    if (!file.type.startsWith('image/')) {
       alert("Please select an image file.");
+      return;
     }
+
+    if (!validateImageSize(file)) return;
+
+    const reader = new FileReader();
+    reader.onloadend = () => {
+      setImageBase64(reader.result);
+      setImageError("");
+    };
+    reader.readAsDataURL(file);
   };
 
   const handleSubmit = async (e) => {
     e.preventDefault();
-    if (isSubmitting) return;
-    setIsSubmitting(true); 
+    setIsSubmitting(true);
 
-    const isValid =
-      validateRecipeName(recipeName) &&
-      validateDescription(description) &&
-      validateIngredients(ingredientFields) &&
-      validateSteps(stepFields) &&
-      validateTags(tags) &&
-      validateExtraImages(extraImages) &&
-      validateImageSize(imageBase64);
+    // Validate all required fields
+    const isRecipeNameValid = validateRecipeName(recipeName);
+    const isDescriptionValid = validateDescription(description);
+    const areIngredientsValid = validateIngredients(ingredientFields);
+    const areStepsValid = validateSteps(stepFields);
+    
+    // Validate tags
+    let areTagsValid = true;
+    if (tags.length === 0) {
+      setTagsError("Please add at least one tag.");
+      areTagsValid = false;
+    } else if (tags.length > MAX_TAGS) {
+      setTagsError(`You can add up to ${MAX_TAGS} tags.`);
+      areTagsValid = false;
+    } else {
+      setTagsError("");
+    }
 
-    if (!isValid) {
-      setIsSubmitting(false); 
+    if (
+      !isRecipeNameValid ||
+      !isDescriptionValid ||
+      !areIngredientsValid ||
+      !areStepsValid ||
+      !areTagsValid ||
+      !imageBase64
+    ) {
+      if (!imageBase64) {
+        setImageError("Please select a recipe image.");
+      }
+      setIsSubmitting(false);
       return;
     }
 
-
     try {
-      const response = await axios.post(
-        `${BASE_URL}/recipe/add_recipe/${user.user._id}`,
-        {
-          title: recipeName,
-          image: imageBase64,
-          description,
-          ingredients: ingredientFields,
-          steps: stepFields.map(step => ({
-            ...step,
-            stepImage: step.stepImage // This will send the base64 image data
-          })),
-          tags,
-          photos: extraImages,
-          user: user.user,
-          userId: user.user._id,
+      // Convert steps images to base64
+      const stepsWithImages = stepFields.map((step) => {
+        let stepImageBase64 = null;
+        if (step.stepImage) {
+          const reader = new FileReader();
+          reader.readAsDataURL(step.stepImage);
+          stepImageBase64 = step.stepImageBase64;
         }
-      );
-      if (response.status === 201) {
-        const { recipe } = response.data;
-        setRecipes((prevRecipes) => [...prevRecipes, recipe]);
-        onRecipeAdded();
-      }
-    } catch (error) {
-      console.error("Error posting recipe:", error.response ? error.response.data : error.message);
-    } finally {
-      setIsSubmitting(false); // Stop submitting after request completes
+        return {
+          description: step.description,
+          stepImage: stepImageBase64,
+        };
+      });
 
+      // Extract tag information for the API
+      const tagData = tags.map(tag => {
+        // Ensure each tag has required fields
+        return {
+          tag: tag.name || tag.tag || "Unknown Tag",
+          _id: tag._id || "",
+          category: tag.category || "uncategorized"
+        };
+      });
+      
+      console.log("Submitting recipe with tags:", tagData);
+
+      // Create the recipe object
+      const recipeData = {
+        title: recipeName,
+        image: imageBase64,
+        description,
+        ingredients: ingredientFields.map(({ name, quantity, measurement }) => ({
+          name,
+          quantity: Number(quantity),
+          measurement,
+        })),
+        steps: stepsWithImages,
+        tags: tagData,
+        photos: extraImages.map(({ base64 }) => ({ image: base64 })),
+        userId: user._id,
+        user,
+      };
+
+      // Make the API request to create the recipe
+      const response = await axios.post(`${BASE_URL}/api/recipe`, recipeData);
+      
+      // Increment usage count for each tag
+      for (const tag of tags) {
+        try {
+          await axios.post(`${BASE_URL}/api/tags/increment`, { tagName: tag.name });
+        } catch (error) {
+          console.error(`Error incrementing tag usage for ${tag.name}:`, error);
+        }
+      }
+
+      if (onRecipeAdded) {
+        onRecipeAdded(response.data.recipe);
+      }
+
+      // Reset form after successful submission
+      setRecipeName("");
+      setDescription("");
+      setIngredientFields([
+        { id: 1, name: "", quantity: "", measurement: "" },
+      ]);
+      setStepFields([
+        { id: 1, description: "", stepImage: null, imageName: "Upload image" },
+      ]);
+      setTags([]);
+      setExtraImages([]);
+      setImageBase64("");
+
+      alert("Recipe created successfully!");
+    } catch (error) {
+      console.error("Error creating recipe:", error);
+      alert(`Error creating recipe: ${error.response?.data?.message || error.message}`);
+    } finally {
+      setIsSubmitting(false);
     }
   };
 
   return (
-    <div className="max-w-screen-2xl lg:max-w-screen-lg mb-20 mx-auto">
-      <h1 className="text-[#D9D9D9] text-4xl font-bold text-center mb-8 tracking-wide shadow-lg p-4 bg-gradient-to-r from-[#4A1C03] via-[#8B4000] to-[#D2691E] rounded-lg">
-        Lets make your recipe public!
-      </h1>
-      <RecipeForm
-        recipeName={recipeName}
-        recipeNameError={recipeNameError}
-        handleRecipeNameChange={handleRecipeNameChange}
-        handleImageChange={handleImageChange}
-        imageError={imageError}
-        imageBase64={imageBase64}
-        description={description}
-        descriptionError={descriptionError}
-        handleDescriptionChange={handleDescriptionChange}
-        ingredientFields={ingredientFields}
-        ingredientErrors={ingredientErrors}
-        handleIngredientChange={handleIngredientChange}
-        handleAddIngredient={handleAddIngredient}
-        handleRemoveIngredient={handleRemoveIngredient}
-        maxIngredients={MAX_INGREDIENTS}
-        stepFields={stepFields}
-        stepErrors={stepErrors}
-        handleStepChange={handleStepChange}
-        handleAddStep={handleAddStep}
-        handleRemoveStep={handleRemoveStep}
-        maxSteps={MAX_STEPS}
-        fileInputRefs={fileInputRefs}
-        tags={tags}
-        tagsError={tagsError}
-        handleTagChange={handleTagChange}
-        removeTag={removeTag}
-        maxTags={MAX_TAGS}
-        extraImages={extraImages}
-        extraImagesError={extraImagesError}
-        handleExtraImageChange={handleExtraImageChange}
-        handleAddExtraImage={handleAddExtraImage}
-        handleRemoveExtraImage={handleRemoveExtraImage}
-        maxExtraImages={MAX_EXTRA_IMAGES}
-        handleSubmit={handleSubmit}
-        isSubmitting={isSubmitting}
-      />
-    </div>
+    <RecipeForm
+      recipeName={recipeName}
+      recipeNameError={recipeNameError}
+      handleRecipeNameChange={handleRecipeNameChange}
+      handleImageChange={handleImageChange}
+      imageError={imageError}
+      imageBase64={imageBase64}
+      description={description}
+      descriptionError={descriptionError}
+      handleDescriptionChange={handleDescriptionChange}
+      ingredientFields={ingredientFields}
+      ingredientErrors={ingredientErrors}
+      handleIngredientChange={handleIngredientChange}
+      handleAddIngredient={handleAddIngredient}
+      handleRemoveIngredient={handleRemoveIngredient}
+      maxIngredients={MAX_INGREDIENTS}
+      stepFields={stepFields}
+      stepErrors={stepErrors}
+      handleStepChange={handleStepChange}
+      handleAddStep={handleAddStep}
+      handleRemoveStep={handleRemoveStep}
+      maxSteps={MAX_STEPS}
+      fileInputRefs={fileInputRefs}
+      tags={tags}
+      tagsError={tagsError}
+      handleTagChange={handleTagChange}
+      handleTagCategoryChange={handleTagCategoryChange}
+      activeTagCategory={activeTagCategory}
+      availableTags={availableTags}
+      removeTag={removeTag}
+      maxTags={MAX_TAGS}
+      extraImages={extraImages}
+      extraImagesError={extraImagesError}
+      handleExtraImageChange={handleExtraImageChange}
+      handleAddExtraImage={handleAddExtraImage}
+      handleRemoveExtraImage={handleRemoveExtraImage}
+      maxExtraImages={MAX_EXTRA_IMAGES}
+      handleSubmit={handleSubmit}
+      isSubmitting={isSubmitting}
+      isLoading={isLoading}
+      tagCategories={Object.keys(TAG_CATEGORIES)}
+    />
   );
 };
 

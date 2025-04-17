@@ -1,5 +1,5 @@
 import { useState, useEffect } from "react";
-import { Link, useParams } from "react-router-dom";
+import { Link, useParams, useNavigate } from "react-router-dom";
 import pastaImg from "../../assets/images/top-10(img-2).png";
 import { FiDownload, FiPlus } from "react-icons/fi";
 import { AiFillLike } from "react-icons/ai";
@@ -30,6 +30,7 @@ const SingleRecipePage = () => {
   const [showDropdown, setShowDropdown] = useState(false);
   const [selectedCookbook, setSelectedCookbook] = useState(null);
   const [containerHeight, setContainerHeight] = useState(0);
+  const navigate = useNavigate();
 
   useEffect(() => {
     const updateContainerHeight = () => {
@@ -153,6 +154,11 @@ const SingleRecipePage = () => {
     }
   };
 
+  const handleTagClick = (tag) => {
+    const tagValue = typeof tag === 'object' ? tag.tag : tag;
+    navigate(`/search?q=&tag=${encodeURIComponent(tagValue)}`);
+  };
+
   return (
     <div className="h-full rounded-lg bg-[#1E1C1A] overflow-hidden flex flex-col">
       {/* Header Part */}
@@ -169,21 +175,21 @@ const SingleRecipePage = () => {
                 {recipe.title}
               </h1>
               {recipe.tags && (
-                <div className="flex flex-wrap">
+                <div className="flex flex-wrap gap-2 mt-2">
                   {recipe.tags.map((tag, index) => (
-                    <span
+                    <button
                       key={index}
-                      className="text-sm lg:text-lg text-[#8F8F8F] mr-1"
+                      onClick={() => handleTagClick(tag)}
+                      className="px-3 py-1 text-xs font-medium bg-[#BE6F50]/90 text-white rounded-full backdrop-blur-sm shadow-md hover:bg-[#BE6F50] transition-colors duration-200 cursor-pointer"
                     >
-                      {tag.tag}
-                      {index !== recipe.tags.length - 1 && ","}
-                    </span>
+                      {typeof tag === 'object' ? tag.tag : tag}
+                    </button>
                   ))}
                 </div>
               )}
               <Link
                 to={`/creator/${recipe.userId}`}
-                className="text-lg lg:text-xl text-[#8F8F8F]"
+                className="text-lg lg:text-xl text-[#8F8F8F] mt-2"
               >
                 <p>{creator.name}</p>
               </Link>
