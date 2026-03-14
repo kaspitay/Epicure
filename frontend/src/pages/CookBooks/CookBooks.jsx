@@ -8,7 +8,7 @@ import { useRecipeContext } from "../../context/RecipeContext";
 import { useEffect, useState } from "react";
 import { useParams } from "react-router-dom";
 
-const CoockBooks = () => {
+const CookBooks = () => {
   const { user } = useAuthContext();
   const { recipes } = useRecipeContext();
   const [filteredRecipes, setFilteredRecipes] = useState([]);
@@ -68,4 +68,4 @@ const CoockBooks = () => {
   );
 };
 
-export default CoockBooks;
+export default CookBooks;

@@ -1,7 +1,7 @@
 import { useState, useEffect } from "react";
 import { FaGoogle, FaEye, FaEyeSlash } from "react-icons/fa";
 import { Link } from "react-router-dom";
-import { useSignup } from "../../hooks/useSighnup";
+import { useSignup } from "../../hooks/useSignup";
 import * as React from "react";
 import { styled } from "@mui/material/styles";
 import Button from "@mui/material/Button";

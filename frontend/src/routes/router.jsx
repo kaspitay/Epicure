@@ -8,7 +8,7 @@ import Login from "../pages/Login/Login";
 import SignUp from "../pages/SignUp/SignUp";
 import CreatorSignUp from "../pages/CreatorSignUp/CreatorSignUp";
 import SingleRecipePage from "../pages/SingleRecipePage/SingleRecipePage";
-import CoockBooks from "../pages/CoockBooks/CoockBooks";
+import CookBooks from "../pages/CookBooks/CookBooks";
 import ContentCreator from "../pages/ContentCreator/ContentCreator";
 import AddRecipe from "../pages/ContentCreator/AddRecipe/AddRecipe";
 
@@ -43,7 +43,7 @@ import AddRecipe from "../pages/ContentCreator/AddRecipe/AddRecipe";
         },
         {
           path: '/cook_books',
-          element: <CoockBooks />
+          element: <CookBooks />
         },
         {
           path: '/creator/:creatorid',

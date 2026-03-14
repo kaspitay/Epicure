@@ -8,7 +8,7 @@ const {
   updateRecipe,
   deleteRecipe,
   addRecipeToCC,
-} = require("../controllers/RecipeControllets");
+} = require("../controllers/recipeController");
 
 router.get("/:id", getRecipe);
 

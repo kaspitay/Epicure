@@ -13,7 +13,7 @@ import Search from "./pages/Search/Search";
 import Login from "./pages/Login/Login";
 import CreatorSignUp from "./pages/CreatorSignUp/CreatorSignUp";
 import SingleRecipePage from "./pages/SingleRecipePage/SingleRecipePage";
-import CoockBooks from "./pages/CoockBooks/CoockBooks";
+import CookBooks from "./pages/CookBooks/CookBooks";
 import ContentCreator from "./pages/ContentCreator/ContentCreator";
 import AddRecipe from "./pages/ContentCreator/AddRecipe/AddRecipe";
 import TagTest from './pages/ContentCreator/AddRecipe/TagTest';
@@ -49,7 +49,7 @@ const App = () => {
 
           <Route
             path="/cook_books/:id/:title"
-            element={user ? <CoockBooks /> : <Navigate to="/login" />}
+            element={user ? <CookBooks /> : <Navigate to="/login" />}
           />
           <Route
             path="/creator/:creatorid"
