@@ -35,7 +35,7 @@ export const recipeApi = {
   },
 
   create: async (data: CreateRecipeData): Promise<Recipe> => {
-    const response = await apiClient.post<{ recipe: Recipe }>('/api/recipe', data);
+    const response = await apiClient.post<{ recipe: Recipe }>('/recipe', data);
     return response.data.recipe;
   },
 
