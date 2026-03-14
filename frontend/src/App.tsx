@@ -1,0 +1,75 @@
+import { BrowserRouter as Router, Routes, Route, Navigate } from 'react-router-dom';
+import { useAuthContext } from './hooks/useAuthContext';
+import ErrorBoundary from './components/ErrorBoundary';
+import Main from './layout/Main';
+import Home from './pages/Home/Home';
+import SignUp from './pages/SignUp/SignUp';
+import Search from './pages/Search/Search';
+import Login from './pages/Login/Login';
+import CreatorSignUp from './pages/CreatorSignUp/CreatorSignUp';
+import SingleRecipePage from './pages/SingleRecipePage/SingleRecipePage';
+import CookBooks from './pages/CookBooks/CookBooks';
+import ContentCreator from './pages/ContentCreator/ContentCreator';
+import AddRecipe from './pages/ContentCreator/AddRecipe/AddRecipe';
+import TagTest from './pages/ContentCreator/AddRecipe/TagTest';
+import DirectTagSelector from './pages/ContentCreator/AddRecipe/DirectTagSelector';
+import TagInspector from './debug/TagInspector';
+import './App.css';
+
+const App = () => {
+  const { user } = useAuthContext();
+
+  return (
+    <ErrorBoundary>
+      <Router>
+      <Routes>
+        <Route path="/" element={<Main />}>
+          <Route
+            path="/"
+            element={user ? <Home /> : <Navigate to="/login" />}
+          />
+          <Route
+            path="/search"
+            element={user ? <Search /> : <Navigate to="/login" />}
+          />
+          <Route
+            path="/recipe/:recipeid"
+            element={user ? <SingleRecipePage /> : <Navigate to="/login" />}
+          />
+
+          <Route
+            path="/cook_books/:id/:title"
+            element={user ? <CookBooks /> : <Navigate to="/login" />}
+          />
+          <Route
+            path="/creator/:creatorid"
+            element={user ? <ContentCreator /> : <Navigate to="/login" />}
+          />
+          <Route
+            path="/add_recipe"
+            element={user ? <AddRecipe /> : <Navigate to="/login" />}
+          />
+          <Route
+            path="/signup"
+            element={!user ? <SignUp /> : <Navigate to="/" />}
+          />
+          <Route
+            path="/login"
+            element={!user ? <Login /> : <Navigate to="/" />}
+          />
+          <Route
+            path="/creatorSignup"
+            element={!user ? <CreatorSignUp /> : <Navigate to="/" />}
+          />
+          <Route path="/debug/tags" element={<TagInspector />} />
+          <Route path="/tag-test" element={<TagTest />} />
+          <Route path="/direct-tag-test" element={<DirectTagSelector />} />
+        </Route>
+        <Route path="*" element={<Navigate to="/" />} />
+      </Routes>
+      </Router>
+    </ErrorBoundary>
+  );
+};
+
+export default App;

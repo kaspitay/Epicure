@@ -105,7 +105,7 @@ const initialTags = [
   { name: 'spicy', category: 'flavor', description: 'Spicy flavor' },
   { name: 'sweet', category: 'flavor', description: 'Sweet flavor' },
   { name: 'savory', category: 'flavor', description: 'Savory flavor' },
-  { name: 'tangy', category: 'flavor', description: 'Tangy flavor' }
+  { name: 'tangy', category: 'flavor', description: 'Tangy flavor' },
 ];
 
 const populateTags = async () => {
@@ -128,4 +128,4 @@ const populateTags = async () => {
   }
 };
 
-populateTags(); 
+populateTags();

@@ -1,43 +1,41 @@
-const mongoose = require("mongoose");
+const mongoose = require('mongoose');
 const Schema = mongoose.Schema;
 
 const ingredientSchema = new Schema({
   name: {
     type: String,
-    required: true
+    required: true,
   },
-  quantity:{type: Number,
-    required: true},
-  measurement:{type: String,
-    required: true}
+  quantity: { type: Number, required: true },
+  measurement: { type: String, required: true },
   // You can add more fields as needed, such as unit of measurement, notes, etc.
 });
 
 const stepsSchema = new Schema({
   description: {
     type: String,
-    required: true
+    required: true,
   },
   stepImage: {
-    type: String
-    },
+    type: String,
+  },
   // You can add more fields as needed, such as unit of measurement, notes, etc.
 });
 
 const tagsSchema = new Schema({
   tag: {
     type: String,
-    required: true
+    required: true,
   },
   _id: {
     type: Schema.Types.ObjectId,
-    ref: "Tag",
-    required: false
+    ref: 'Tag',
+    required: false,
   },
   category: {
     type: String,
-    required: false
-  }
+    required: false,
+  },
 });
 
 const photosSchema = new Schema({
@@ -65,12 +63,11 @@ const recipeSchema = new Schema(
     photos: [photosSchema],
     userId: {
       type: Schema.Types.ObjectId,
-      ref: "User",
+      ref: 'User',
     },
-
   },
   { timestamps: true },
-  { collection: "Recipe" }
+  { collection: 'Recipe' }
 );
 
-module.exports = mongoose.model("Recipe", recipeSchema);
+module.exports = mongoose.model('Recipe', recipeSchema);

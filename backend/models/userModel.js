@@ -1,7 +1,6 @@
-const mongoose = require("mongoose");
-const bcrypt = require("bcrypt");
-const validator = require("validator");
-const { schema } = require("./RecipeModel");
+const mongoose = require('mongoose');
+const bcrypt = require('bcrypt');
+const validator = require('validator');
 
 const Schema = mongoose.Schema;
 
@@ -12,21 +11,21 @@ const booksSchema = new Schema({
   },
   recipes: {
     type: [Schema.Types.ObjectId],
-    ref: "Recipe",
+    ref: 'Recipe',
     default: [],
   },
 });
 
 const chefSchema = new Schema({
- ccName: {
-   type: String,
-   required: true,
- },
- ccId: {
-   type: Schema.Types.ObjectId,
-   ref: "User",
-   required: true,
- },
+  ccName: {
+    type: String,
+    required: true,
+  },
+  ccId: {
+    type: Schema.Types.ObjectId,
+    ref: 'User',
+    required: true,
+  },
 });
 
 const userSchema = new Schema(
@@ -49,12 +48,12 @@ const userSchema = new Schema(
       required: true,
     },
     recipes: {
-      type: [{ type: Schema.Types.ObjectId, ref: "recipes" }], // Note the use of 'type' inside the array declaration
+      type: [{ type: Schema.Types.ObjectId, ref: 'recipes' }], // Note the use of 'type' inside the array declaration
       default: [],
     },
     favorites: {
       type: [Schema.Types.ObjectId],
-      ref: "Recipe",
+      ref: 'Recipe',
       default: [],
     },
     books: {
@@ -74,44 +73,37 @@ const userSchema = new Schema(
     },
     bio: {
       type: String,
-      default: "",
+      default: '',
     },
     profilePicture: {
       type: String,
-      default: "",
+      default: '',
     },
   },
   { timestamps: true }
 );
 
 // static signup method
-userSchema.statics.signup = async function (
-  name,
-  email,
-  password,
-  userType,
-  bio,
-  profilePicture
-) {
+userSchema.statics.signup = async function (name, email, password, userType, bio, profilePicture) {
   //check if all fields are filled out
   if (!name | !email || !password) {
-    throw new Error("Email and password are required");
+    throw new Error('Email and password are required');
   }
 
   //check if the string is an email format
   if (!validator.isEmail(email)) {
-    throw new Error("Email is not valid");
+    throw new Error('Email is not valid');
   }
 
   //check if password is strong enough (8 characters, 1 uppercase, 1 lowercase, 1 number, 1 special character)
   if (!validator.isStrongPassword(password)) {
-    throw new Error("Password is not strong enough");
+    throw new Error('Password is not strong enough');
   }
 
   //double check that the email is unique
   const emailExists = await this.findOne({ email });
   if (emailExists) {
-    throw new Error("Email already exists");
+    throw new Error('Email already exists');
   }
 
   //hash the password
@@ -135,27 +127,27 @@ userSchema.statics.signup = async function (
 userSchema.statics.login = async function (email, password) {
   //check if all fields are filled out
   if (!email || !password) {
-    throw new Error("Email and password are required");
+    throw new Error('Email and password are required');
   }
 
   //check if the string is an email format
   if (!validator.isEmail(email)) {
-    throw new Error("Email is not valid");
+    throw new Error('Email is not valid');
   }
 
   //find the user
   const user = await this.findOne({ email });
   if (!user) {
-    throw new Error("Email does not exist");
+    throw new Error('Email does not exist');
   }
 
   //compare the password
   const isMatch = await bcrypt.compare(password, user.password);
   if (!isMatch) {
-    throw new Error("Password is incorrect");
+    throw new Error('Password is incorrect');
   }
 
   return user;
 };
 
-module.exports = mongoose.model("User", userSchema);
+module.exports = mongoose.model('User', userSchema);
