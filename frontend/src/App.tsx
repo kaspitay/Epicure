@@ -1,5 +1,6 @@
 import { BrowserRouter as Router, Routes, Route, Navigate } from 'react-router-dom';
 import { useAuthContext } from './hooks/useAuthContext';
+import ErrorBoundary from './components/ErrorBoundary';
 import Main from './layout/Main';
 import Home from './pages/Home/Home';
 import SignUp from './pages/SignUp/SignUp';
@@ -19,7 +20,8 @@ const App = () => {
   const { user } = useAuthContext();
 
   return (
-    <Router>
+    <ErrorBoundary>
+      <Router>
       <Routes>
         <Route path="/" element={<Main />}>
           <Route
@@ -65,7 +67,8 @@ const App = () => {
         </Route>
         <Route path="*" element={<Navigate to="/" />} />
       </Routes>
-    </Router>
+      </Router>
+    </ErrorBoundary>
   );
 };
 

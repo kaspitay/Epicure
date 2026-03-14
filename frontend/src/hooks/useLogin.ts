@@ -1,7 +1,6 @@
 import { useState } from 'react';
 import { useAuthContext } from './useAuthContext';
-import { userApi } from '../api';
-import { AxiosError } from 'axios';
+import { userApi, ApiError } from '../api';
 
 interface UseLoginReturn {
   error: string | null;
@@ -23,8 +22,11 @@ export const useLogin = (): UseLoginReturn => {
       dispatch({ type: 'LOGIN', payload: data });
       return true;
     } catch (err) {
-      const axiosError = err as AxiosError<{ message?: string }>;
-      setError(axiosError.response?.data?.message || 'An error occurred. Please try again.');
+      if (err instanceof ApiError) {
+        setError(err.message);
+      } else {
+        setError('An error occurred. Please try again.');
+      }
       return false;
     } finally {
       setLoading(false);
