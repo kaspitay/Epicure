@@ -210,6 +210,16 @@ Recipes can be tagged with the following categories:
 | Difficulty | Easy, Medium, Advanced |
 | Cooking Time | Quick (15 min), Medium (30 min), Long (1h+) |
 
+## Authors
+
+This project was originally developed as a **Computer Science BSc Final Project** at Ben-Gurion University by:
+
+- **Itay Kaspi** - [kaspitay](https://github.com/kaspitay)
+- **Tamir Alaluf**
+- **Ido Givaty**
+
+Currently maintained and improved by **Itay Kaspi**.
+
 ## Contributing
 
 1. Fork the repository
@@ -221,7 +231,3 @@ Recipes can be tagged with the following categories:
 ## License
 
 This project is licensed under the MIT License - see the [LICENSE](LICENSE) file for details.
-
----
-
-Built with by [kaspitay](https://github.com/kaspitay)
