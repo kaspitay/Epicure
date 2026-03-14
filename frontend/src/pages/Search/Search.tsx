@@ -1,318 +1,389 @@
-import { FaSearch, FaFilter, FaFire, FaStar } from "react-icons/fa";
-import PageHeader from "../../components/common/PageHeader/PageHeader";
-import { useEffect, useState } from "react";
-import SearchBar from "./components/SearchBar.jsx";
-import SearchResultsList from "../../components/SearchResultsList.jsx";
+import { useEffect, useState, useMemo } from "react";
+import { motion, AnimatePresence } from "framer-motion";
+import { FiX, FiSliders } from "react-icons/fi";
+import { LuChefHat } from "react-icons/lu";
+import { MdRestaurantMenu } from "react-icons/md";
+import SearchBar from "./components/SearchBar";
+import RecipeCard from "../../components/RecipeCard";
 import { useRecipeContext } from "../../context/RecipeContext";
 import { useAuthContext } from "../../hooks/useAuthContext";
-import { useLocation, useNavigate } from "react-router-dom";
+import { useLocation, useNavigate, Link } from "react-router-dom";
+import { Recipe, User } from "../../types";
 
-// Tag categories (for UI organization)
-const TAG_CATEGORIES = {
-  dietary: {name: 'Dietary', icon: '🥗'},
-  mealType: {name: 'Meal Type', icon: '🍲'},
-  cuisine: {name: 'Cuisine', icon: '🌎'},
-  cookingTime: {name: 'Cooking Time', icon: '⏱️'},
-  difficulty: {name: 'Difficulty', icon: '📊'},
-  season: {name: 'Season', icon: '🍂'},
-  special: {name: 'Special', icon: '✨'}
-};
+// All filter options in a flat structure for horizontal display
+const FILTER_GROUPS = [
+  {
+    id: "cuisine",
+    label: "Cuisine",
+    options: ["Italian", "Mexican", "Chinese", "Indian", "Japanese", "Thai", "Mediterranean", "French"],
+  },
+  {
+    id: "meal",
+    label: "Meal",
+    options: ["Breakfast", "Lunch", "Dinner", "Dessert", "Snack", "Appetizer"],
+  },
+  {
+    id: "diet",
+    label: "Diet",
+    options: ["Vegetarian", "Vegan", "Gluten-Free", "Keto", "Healthy", "Low-Carb"],
+  },
+  {
+    id: "difficulty",
+    label: "Difficulty",
+    options: ["Easy", "Medium", "Advanced"],
+  },
+];
 
-// Available tags for each category
-const AVAILABLE_TAGS = {
-  dietary: ['Vegetarian', 'Vegan', 'Gluten-Free', 'Dairy-Free', 'Keto', 'Paleo'],
-  mealType: ['Breakfast', 'Lunch', 'Dinner', 'Snack', 'Dessert', 'Appetizer'],
-  cuisine: ['Italian', 'Mexican', 'Chinese', 'Indian', 'Japanese', 'Mediterranean'],
-  cookingTime: ['Quick (15 min)', 'Medium (30 min)', 'Long (1h+)'],
-  difficulty: ['Easy', 'Medium', 'Advanced'],
-  season: ['Spring', 'Summer', 'Fall', 'Winter'],
-  special: ['Holiday', 'Party', 'Comfort Food', 'Healthy']
-};
-
-// Popular tags (would come from API in real implementation)
-const POPULAR_TAGS = ['Vegetarian', 'Italian', 'Easy', 'Quick (15 min)', 'Healthy'];
+const QUICK_FILTERS = ["Italian", "Vegetarian", "Easy", "Dessert", "Healthy", "Quick (15 min)"];
 
 const Search = () => {
   const location = useLocation();
   const navigate = useNavigate();
-  const [searchQuery, setSearchQuery] = useState("");
-  const [activeFilter, setActiveFilter] = useState("recipes");
   const { recipes } = useRecipeContext();
   const { users } = useAuthContext();
-  const [searchResults, setSearchResults] = useState([]);
-  const [selectedTag, setSelectedTag] = useState("");
-  const [showTagDropdown, setShowTagDropdown] = useState(false);
-  const [activeCategory, setActiveCategory] = useState('dietary');
 
+  const [searchQuery, setSearchQuery] = useState("");
+  const [searchType, setSearchType] = useState<"recipes" | "creators">("recipes");
+  const [selectedTags, setSelectedTags] = useState<string[]>([]);
+  const [activeFilterGroup, setActiveFilterGroup] = useState<string | null>(null);
+
+  // Parse URL params on mount
   useEffect(() => {
     const params = new URLSearchParams(location.search);
-    const query = params.get('q') || '';
-    const tag = params.get('tag') || '';
-    
+    const query = params.get("q") || "";
+    const tag = params.get("tag") || "";
+
     setSearchQuery(query);
-    setSelectedTag(tag);
-    
     if (tag) {
-      setActiveFilter("recipes");
+      setSelectedTags([tag]);
+      setSearchType("recipes");
     }
-    
-    filterResults(query, tag);
-  }, [location.search, recipes]);
+  }, [location.search]);
 
-  const handleInputChange = (e) => {
-    const query = e.target.value.toLowerCase();
-    setSearchQuery(query);
-    updateUrl(query, selectedTag);
-    filterResults(query, selectedTag);
-  };
+  // Filter results
+  const filteredResults = useMemo(() => {
+    let results: (Recipe | User)[] = searchType === "recipes" ? [...recipes] : [...users];
 
-  const handleTagToggle = (tag) => {
-    // If tag is already selected, deselect it
-    const newTag = tag === selectedTag ? "" : tag;
-    setSelectedTag(newTag);
-    updateUrl(searchQuery, newTag);
-    filterResults(searchQuery, newTag);
-  };
-
-  const updateUrl = (query, tag) => {
-    const params = new URLSearchParams();
-    if (query) params.set('q', query);
-    if (tag) params.set('tag', tag);
-    navigate(`?${params.toString()}`, { replace: true });
-  };
-
-  const filterResults = (query, tag) => {
-    let results = activeFilter === "recipes" ? [...recipes] : [...users];
-    
     // Filter by search query
-    if (query) {
-      results = results.filter(item => 
-        activeFilter === "recipes" 
-          ? item.title.toLowerCase().includes(query)
-          : item.name.toLowerCase().includes(query)
+    if (searchQuery) {
+      const query = searchQuery.toLowerCase();
+      results = results.filter((item) =>
+        searchType === "recipes"
+          ? (item as Recipe).title?.toLowerCase().includes(query)
+          : (item as User).name?.toLowerCase().includes(query)
       );
     }
 
-    // Filter by tag (only for recipes)
-    if (activeFilter === "recipes" && tag) {
-      results = results.filter(recipe => {
-        if (!recipe.tags || !recipe.tags.length) return false;
-        
-        // Get tag strings from recipe tags
-        const recipeTags = recipe.tags.map(t => {
-          return typeof t === 'object' ? t.tag : t;
-        });
-        
-        return recipeTags.some(recipeTag => 
-          recipeTag.toLowerCase() === tag.toLowerCase()
-        );
+    // Filter by tags (recipes only)
+    if (searchType === "recipes" && selectedTags.length > 0) {
+      results = results.filter((recipe) => {
+        const r = recipe as Recipe;
+        if (!r.tags || !r.tags.length) return false;
+        const recipeTags = r.tags.map((t) => (typeof t === "object" ? t.tag : t).toLowerCase());
+        return selectedTags.some((tag) => recipeTags.includes(tag.toLowerCase()));
       });
     }
 
-    setSearchResults(results);
+    return results;
+  }, [recipes, users, searchQuery, searchType, selectedTags]);
+
+  const handleSearchChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    setSearchQuery(e.target.value);
+    updateUrl(e.target.value, selectedTags);
   };
 
-  const handleSearchType = (searchType) => {
-    if (searchType === "recipes") {
-      setActiveFilter("recipes");
-      setSearchResults(recipes);
-    } else {
-      setActiveFilter("creators");
-      setSearchResults(users);
-    }
+  const handleClearSearch = () => {
     setSearchQuery("");
-    setSelectedTag("");
-    navigate('/search', { replace: true });
+    updateUrl("", selectedTags);
   };
 
-  const renderSearchResultsList_5Items = (results) => {
-    if (results.length === 0) {
-      return (
-        <div className="text-center text-white py-8">
-          <p className="text-xl">No results found</p>
-          <p className="text-gray-400">Try adjusting your search or filters</p>
-        </div>
-      );
-    }
+  const handleTagToggle = (tag: string) => {
+    const newTags = selectedTags.includes(tag)
+      ? selectedTags.filter((t) => t !== tag)
+      : [...selectedTags, tag];
+    setSelectedTags(newTags);
+    updateUrl(searchQuery, newTags);
+  };
 
-    const results_5items_array = [];
-    for (let i = 0; i < results.length; i += 5) {
-      const chunk = results.slice(i, i + 5);
-      results_5items_array.push(chunk);
-    }
-    return results_5items_array.map((chunk, index) => (
-      <SearchResultsList
-        key={index}
-        results={chunk}
-        searchFilter={activeFilter}
-        arrow={false}
-        popularTags={POPULAR_TAGS}
-      />
-    ));
+  const clearAllFilters = () => {
+    setSelectedTags([]);
+    updateUrl(searchQuery, []);
+  };
+
+  const updateUrl = (query: string, tags: string[]) => {
+    const params = new URLSearchParams();
+    if (query) params.set("q", query);
+    if (tags.length === 1) params.set("tag", tags[0]);
+    navigate(`?${params.toString()}`, { replace: true });
+  };
+
+  const handleSearchTypeChange = (type: "recipes" | "creators") => {
+    setSearchType(type);
+    setSelectedTags([]);
+    setSearchQuery("");
+    setActiveFilterGroup(null);
+    navigate("/search", { replace: true });
   };
 
   return (
-    <div className="w-full h-full">
-      <div className="flex flex-col gap-4 p-4">
-        {/* Search Type Toggle */}
-        <div className="flex justify-center">
-          <div className="flex text-white gap-4 bg-[#2A2826] p-1 rounded-full">
-            <button
-              className={`px-6 py-2 rounded-full transition-all duration-200 font-medium ${
-                activeFilter === "recipes" 
-                  ? "bg-[#BE6F50] text-white shadow-lg" 
-                  : "text-gray-200 hover:text-white"
-              }`}
-              onClick={() => handleSearchType("recipes")}
-            >
-              Recipes
-            </button>
-            <button
-              className={`px-6 py-2 rounded-full transition-all duration-200 font-medium ${
-                activeFilter === "creators" 
-                  ? "bg-[#BE6F50] text-white shadow-lg" 
-                  : "text-gray-200 hover:text-white"
-              }`}
-              onClick={() => handleSearchType("creators")}
-            >
-              Content Creators
-            </button>
-          </div>
-        </div>
+    <motion.div
+      initial={{ opacity: 0 }}
+      animate={{ opacity: 1 }}
+      className="min-h-full flex flex-col"
+    >
+      {/* Header */}
+      <div className="sticky top-0 z-30 bg-[#1E1C1A] border-b border-white/5">
+        <div className="max-w-7xl mx-auto px-4 py-4">
+          {/* Search Type Toggle */}
+          <div className="flex items-center justify-between gap-4 mb-4">
+            <div className="flex bg-[#272727] p-1 rounded-full">
+              <button
+                onClick={() => handleSearchTypeChange("recipes")}
+                className={`flex items-center gap-2 px-4 py-2 rounded-full text-sm font-medium transition-all duration-200 ${
+                  searchType === "recipes"
+                    ? "bg-[#BE6F50] text-white"
+                    : "text-gray-400 hover:text-white"
+                }`}
+              >
+                <MdRestaurantMenu />
+                <span>Recipes</span>
+              </button>
+              <button
+                onClick={() => handleSearchTypeChange("creators")}
+                className={`flex items-center gap-2 px-4 py-2 rounded-full text-sm font-medium transition-all duration-200 ${
+                  searchType === "creators"
+                    ? "bg-[#BE6F50] text-white"
+                    : "text-gray-400 hover:text-white"
+                }`}
+              >
+                <LuChefHat />
+                <span>Chefs</span>
+              </button>
+            </div>
 
-        {/* Search Bar and Tag Filter */}
-        <div className="flex items-center justify-center gap-4">
-          <div className="relative max-w-2xl w-full">
-            <SearchBar 
-              value={searchQuery} 
-              onChange={handleInputChange} 
-              placeholder={activeFilter === "recipes" ? "What's cooking?" : "Who's cooking?"}
+            {/* Results count */}
+            <span className="text-sm text-gray-400">
+              <span className="text-white font-medium">{filteredResults.length}</span> results
+            </span>
+          </div>
+
+          {/* Search Bar */}
+          <div className="max-w-2xl">
+            <SearchBar
+              value={searchQuery}
+              onChange={handleSearchChange}
+              onClear={handleClearSearch}
+              placeholder={searchType === "recipes" ? "Search recipes..." : "Search chefs..."}
+              autoFocus
             />
           </div>
-          
-          {activeFilter === "recipes" && (
-            <div className="relative">
-              <button
-                onClick={() => setShowTagDropdown(!showTagDropdown)}
-                className="flex items-center gap-2 px-4 py-2 rounded-lg bg-[#2A2826] text-[#BE6F50] hover:bg-[#BE6F50]/20 transition-colors duration-200"
-              >
-                <FaFilter className="h-5 w-5" />
-                <span className="font-medium">Tags</span>
-                {selectedTag && (
-                  <span className="ml-1 px-2 py-0.5 bg-[#BE6F50] text-white text-xs rounded-full">
-                    1
-                  </span>
-                )}
-              </button>
 
-              {/* Tag Dropdown */}
-              {showTagDropdown && (
-                <div className="absolute right-0 top-12 z-50 bg-[#2A2826] rounded-lg shadow-lg border border-[#BE6F50]/20 p-4 min-w-[300px] max-h-[80vh] overflow-y-auto">
-                  {/* Popular Tags Section */}
-                  <div className="mb-6">
-                    <div className="flex items-center gap-2 text-white mb-3">
-                      <FaFire className="h-4 w-4 text-amber-500" />
-                      <h3 className="font-medium text-amber-300">Popular Tags</h3>
-                    </div>
-                    <div className="flex flex-wrap gap-2">
-                      {POPULAR_TAGS.map((tag) => (
-                        <button
-                          key={tag}
-                          onClick={() => handleTagToggle(tag)}
-                          className={`px-3 py-1 rounded-full text-sm font-medium transition-all duration-200 flex items-center gap-1 ${
-                            selectedTag === tag
-                              ? 'bg-gradient-to-r from-amber-500 to-amber-600 text-white shadow-md'
-                              : 'bg-gradient-to-r from-amber-900/40 to-amber-800/40 text-amber-200 border border-amber-600/30 hover:bg-amber-700/40'
-                          }`}
-                        >
-                          <FaStar className="h-3 w-3" />
-                          <span>{tag}</span>
-                        </button>
-                      ))}
-                    </div>
-                  </div>
+          {/* Filters - Only for recipes */}
+          {searchType === "recipes" && (
+            <div className="mt-4">
+              {/* Quick Filters */}
+              <div className="flex items-center gap-2 overflow-x-auto pb-2 scrollbar-none">
+                <span className="text-xs text-gray-500 flex-shrink-0">Quick:</span>
+                {QUICK_FILTERS.map((tag) => (
+                  <button
+                    key={tag}
+                    onClick={() => handleTagToggle(tag)}
+                    className={`flex-shrink-0 px-3 py-1.5 rounded-full text-xs font-medium transition-all duration-200 ${
+                      selectedTags.includes(tag)
+                        ? "bg-[#BE6F50] text-white"
+                        : "bg-[#2A2725] text-gray-300 hover:bg-[#BE6F50]/20"
+                    }`}
+                  >
+                    {tag}
+                  </button>
+                ))}
 
-                  {/* Divider */}
-                  <div className="border-b border-[#BE6F50]/20 mb-4"></div>
-
-                  {/* Tag Categories */}
-                  <div className="flex flex-wrap gap-2 mb-4">
-                    <h3 className="w-full text-white mb-3 font-medium">Browse by Category</h3>
-                    <div className="grid grid-cols-2 gap-2 w-full">
-                      {Object.entries(TAG_CATEGORIES).map(([category, details]) => (
-                        <button
-                          key={category}
-                          onClick={() => setActiveCategory(category)}
-                          className={`category-button ${
-                            activeCategory === category
-                              ? 'category-button-active'
-                              : 'category-button-inactive'
-                          }`}
-                        >
-                          <span className="text-lg">{details.icon}</span>
-                          <span>{details.name}</span>
-                        </button>
-                      ))}
-                    </div>
-                  </div>
-
-                  {/* Tags for selected category */}
-                  <div>
-                    <h3 className="text-white mb-3 font-medium flex items-center gap-2">
-                      <span className="text-lg">{TAG_CATEGORIES[activeCategory].icon}</span>
-                      <span>{TAG_CATEGORIES[activeCategory].name} Tags</span>
-                    </h3>
-                    <div className="flex flex-wrap gap-2">
-                      {AVAILABLE_TAGS[activeCategory].map((tag) => (
-                        <button
-                          key={tag}
-                          onClick={() => handleTagToggle(tag)}
-                          className={`px-4 py-1.5 rounded-full text-sm font-medium transition-all duration-200 ${
-                            selectedTag === tag
-                              ? 'bg-[#BE6F50] text-white shadow-md'
-                              : 'bg-[#1E1C1A] text-gray-200 border border-[#BE6F50]/20 hover:bg-[#BE6F50]/10'
-                          }`}
-                        >
-                          {tag}
-                        </button>
-                      ))}
-                    </div>
-                  </div>
+                {/* More Filters Button */}
+                <div className="flex-shrink-0 border-l border-white/10 pl-2 ml-2">
+                  <button
+                    onClick={() => setActiveFilterGroup(activeFilterGroup ? null : "cuisine")}
+                    className={`flex items-center gap-1.5 px-3 py-1.5 rounded-full text-xs font-medium transition-all duration-200 ${
+                      activeFilterGroup
+                        ? "bg-[#BE6F50] text-white"
+                        : "bg-[#2A2725] text-gray-300 hover:bg-[#BE6F50]/20"
+                    }`}
+                  >
+                    <FiSliders className="text-xs" />
+                    <span>More</span>
+                  </button>
                 </div>
-              )}
+              </div>
+
+              {/* Expanded Filter Groups */}
+              <AnimatePresence>
+                {activeFilterGroup && (
+                  <motion.div
+                    initial={{ opacity: 0, height: 0 }}
+                    animate={{ opacity: 1, height: "auto" }}
+                    exit={{ opacity: 0, height: 0 }}
+                    className="mt-3 pt-3 border-t border-white/5"
+                  >
+                    {/* Filter Group Tabs */}
+                    <div className="flex gap-1 mb-3">
+                      {FILTER_GROUPS.map((group) => (
+                        <button
+                          key={group.id}
+                          onClick={() => setActiveFilterGroup(group.id)}
+                          className={`px-3 py-1 rounded-md text-xs font-medium transition-colors ${
+                            activeFilterGroup === group.id
+                              ? "bg-white/10 text-white"
+                              : "text-gray-400 hover:text-white"
+                          }`}
+                        >
+                          {group.label}
+                        </button>
+                      ))}
+                    </div>
+
+                    {/* Active Group Options */}
+                    {FILTER_GROUPS.filter((g) => g.id === activeFilterGroup).map((group) => (
+                      <div key={group.id} className="flex flex-wrap gap-2">
+                        {group.options.map((option) => (
+                          <button
+                            key={option}
+                            onClick={() => handleTagToggle(option)}
+                            className={`px-3 py-1.5 rounded-full text-xs font-medium transition-all duration-200 ${
+                              selectedTags.includes(option)
+                                ? "bg-[#BE6F50] text-white"
+                                : "bg-[#2A2725] text-gray-400 hover:text-white hover:bg-[#BE6F50]/20"
+                            }`}
+                          >
+                            {option}
+                          </button>
+                        ))}
+                      </div>
+                    ))}
+                  </motion.div>
+                )}
+              </AnimatePresence>
+
+              {/* Selected Filters Display */}
+              <AnimatePresence>
+                {selectedTags.length > 0 && (
+                  <motion.div
+                    initial={{ opacity: 0, height: 0 }}
+                    animate={{ opacity: 1, height: "auto" }}
+                    exit={{ opacity: 0, height: 0 }}
+                    className="flex items-center gap-2 mt-3 pt-3 border-t border-white/5"
+                  >
+                    <span className="text-xs text-gray-500">Active:</span>
+                    {selectedTags.map((tag) => (
+                      <motion.button
+                        key={tag}
+                        initial={{ opacity: 0, scale: 0.8 }}
+                        animate={{ opacity: 1, scale: 1 }}
+                        exit={{ opacity: 0, scale: 0.8 }}
+                        onClick={() => handleTagToggle(tag)}
+                        className="flex items-center gap-1 px-2 py-1 rounded-full bg-[#BE6F50] text-white text-xs"
+                      >
+                        <span>{tag}</span>
+                        <FiX className="text-xs" />
+                      </motion.button>
+                    ))}
+                    <button
+                      onClick={clearAllFilters}
+                      className="text-xs text-gray-400 hover:text-white ml-1"
+                    >
+                      Clear all
+                    </button>
+                  </motion.div>
+                )}
+              </AnimatePresence>
             </div>
           )}
         </div>
+      </div>
 
-        {/* Selected Tag Display */}
-        {activeFilter === "recipes" && selectedTag && (
-          <div className="flex flex-wrap gap-2 justify-center mt-2">
-            <div
-              className={`flex items-center gap-2 px-3 py-1 rounded-full ${
-                POPULAR_TAGS.includes(selectedTag)
-                  ? 'bg-gradient-to-r from-amber-500 to-amber-600 text-white'
-                  : 'bg-[#BE6F50] text-white'
-              }`}
-            >
-              {POPULAR_TAGS.includes(selectedTag) && <FaStar className="h-3 w-3" />}
-              <span className="text-sm font-medium">{selectedTag}</span>
-              <button
-                onClick={() => handleTagToggle(selectedTag)}
-                className="text-white hover:text-gray-200 ml-1"
-              >
-                ×
-              </button>
+      {/* Results */}
+      <div className="flex-1 max-w-7xl mx-auto w-full px-4 py-6">
+        {filteredResults.length === 0 ? (
+          <motion.div
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            className="text-center py-20"
+          >
+            <div className="w-16 h-16 mx-auto mb-4 rounded-full bg-[#272727] flex items-center justify-center">
+              {searchType === "recipes" ? (
+                <MdRestaurantMenu className="text-2xl text-gray-500" />
+              ) : (
+                <LuChefHat className="text-2xl text-gray-500" />
+              )}
             </div>
+            <h3 className="text-lg text-white font-medium mb-1">No results found</h3>
+            <p className="text-gray-400 text-sm mb-4">
+              {searchQuery || selectedTags.length > 0
+                ? "Try different keywords or filters"
+                : `Search for ${searchType === "recipes" ? "recipes" : "chefs"}`}
+            </p>
+            {(searchQuery || selectedTags.length > 0) && (
+              <button
+                onClick={() => {
+                  setSearchQuery("");
+                  setSelectedTags([]);
+                  navigate("/search", { replace: true });
+                }}
+                className="px-4 py-2 rounded-full bg-[#BE6F50] text-white text-sm font-medium hover:bg-[#A85D40] transition-colors"
+              >
+                Clear all filters
+              </button>
+            )}
+          </motion.div>
+        ) : (
+          <div
+            className="grid gap-4"
+            style={{
+              gridTemplateColumns: "repeat(auto-fill, minmax(180px, 1fr))",
+            }}
+          >
+            {filteredResults.map((item, index) =>
+              searchType === "recipes" ? (
+                <RecipeCard key={item._id} recipe={item as Recipe} index={index} />
+              ) : (
+                <CreatorCard key={item._id} creator={item as User} index={index} />
+              )
+            )}
           </div>
         )}
-
-        {/* Search Results */}
-        <div className="mt-4">
-          {renderSearchResultsList_5Items(searchResults)}
-        </div>
       </div>
-    </div>
+    </motion.div>
   );
 };
+
+// Creator Card Component
+const CreatorCard = ({ creator, index }: { creator: User; index: number }) => (
+  <motion.div
+    initial={{ opacity: 0, y: 20 }}
+    animate={{ opacity: 1, y: 0 }}
+    transition={{ duration: 0.3, delay: index * 0.03 }}
+    whileHover={{ y: -4 }}
+    className="h-full"
+  >
+    <Link to={`/creator/${creator._id}`} className="block h-full">
+      <div className="flex flex-col items-center p-4 rounded-xl bg-[#2A2725] hover:bg-[#332F2C] transition-all duration-300 h-full">
+        <div className="relative w-20 h-20 mb-3 flex-shrink-0">
+          <img
+            src={creator.profilePicture || "/default-avatar.png"}
+            alt={creator.name}
+            className="w-full h-full object-cover rounded-full ring-2 ring-[#BE6F50]/30 hover:ring-[#BE6F50] transition-all duration-300"
+          />
+          <div className="absolute -bottom-1 -right-1 w-6 h-6 bg-[#BE6F50] rounded-full flex items-center justify-center">
+            <span className="text-white text-xs font-bold">
+              {creator.recipes?.length || 0}
+            </span>
+          </div>
+        </div>
+        <h3 className="text-white font-medium text-sm text-center line-clamp-1 w-full">
+          {creator.name}
+        </h3>
+        <p className="text-gray-400 text-xs mt-1">{creator.likes || 0} likes</p>
+      </div>
+    </Link>
+  </motion.div>
+);
 
 export default Search;

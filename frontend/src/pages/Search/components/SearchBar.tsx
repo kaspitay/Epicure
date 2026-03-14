@@ -1,17 +1,45 @@
-import { FaSearch } from "react-icons/fa";
+import { ChangeEvent } from "react";
+import { motion } from "framer-motion";
+import { FiSearch, FiX } from "react-icons/fi";
 
-const SearchBar = ({ value, onChange, placeholder }) => {
+interface SearchBarProps {
+  value: string;
+  onChange: (e: ChangeEvent<HTMLInputElement>) => void;
+  onClear?: () => void;
+  placeholder?: string;
+  autoFocus?: boolean;
+}
+
+const SearchBar = ({ value, onChange, onClear, placeholder, autoFocus = false }: SearchBarProps) => {
   return (
-    <div className="relative w-full">
-      <input
-        type="text"
-        value={value}
-        onChange={onChange}
-        placeholder={placeholder}
-        className="w-full px-4 py-2 pl-10 pr-4 rounded-lg bg-[#2A2826] text-white placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-[#BE6F50]"
-      />
-      <FaSearch className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400" />
-    </div>
+    <motion.div
+      initial={{ opacity: 0, y: -10 }}
+      animate={{ opacity: 1, y: 0 }}
+      className="relative w-full"
+    >
+      <div className="relative flex items-center">
+        <FiSearch className="absolute left-4 text-gray-400 text-lg" />
+        <input
+          type="text"
+          value={value}
+          onChange={onChange}
+          placeholder={placeholder}
+          autoFocus={autoFocus}
+          className="w-full px-12 py-3.5 rounded-xl bg-[#2A2725] text-white placeholder-gray-500 border border-white/10 focus:outline-none focus:border-[#BE6F50] focus:bg-[#BE6F50]/5 transition-all duration-200"
+        />
+        {value && onClear && (
+          <motion.button
+            initial={{ opacity: 0, scale: 0.8 }}
+            animate={{ opacity: 1, scale: 1 }}
+            exit={{ opacity: 0, scale: 0.8 }}
+            onClick={onClear}
+            className="absolute right-4 p-1 rounded-full text-gray-400 hover:text-white hover:bg-white/10 transition-colors"
+          >
+            <FiX className="text-lg" />
+          </motion.button>
+        )}
+      </div>
+    </motion.div>
   );
 };
 
