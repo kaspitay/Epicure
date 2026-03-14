@@ -1,48 +1,48 @@
-const express = require("express");
-const bodyParser = require("body-parser");
-const path = require("path");
+const express = require('express');
+const bodyParser = require('body-parser');
+const path = require('path');
 const app = express();
-require("dotenv").config();
+require('dotenv').config();
 const PORT = process.env.PORT;
 const MONGO = process.env.MONGO_URI;
-const mongoose = require("mongoose");
+const mongoose = require('mongoose');
 
-const recipeRoutes = require("./routes/recipe");
-const userRoutes = require("./routes/user");
-const tagRoutes = require("./routes/tag");
+const recipeRoutes = require('./routes/recipe');
+const userRoutes = require('./routes/user');
+const tagRoutes = require('./routes/tag');
 
 //cors
-const cors = require("cors");
+const cors = require('cors');
 app.use(cors());
 
 //middleware
-app.use(bodyParser.json({ limit: "50mb" }));
-app.use(bodyParser.urlencoded({ limit: "50mb", extended: true }));
+app.use(bodyParser.json({ limit: '50mb' }));
+app.use(bodyParser.urlencoded({ limit: '50mb', extended: true }));
 app.use(express.json());
 
 // Serve uploaded images
-app.use("/uploads", express.static(path.join(__dirname, "uploads")));
+app.use('/uploads', express.static(path.join(__dirname, 'uploads')));
 app.use((res, req, next) => {
   console.log(res.body);
   next();
 });
-app.get("/test-compression", (req, res) => {
-  res.send("A".repeat(100000));
+app.get('/test-compression', (req, res) => {
+  res.send('A'.repeat(100000));
 });
 //routes
 
-app.use("/api/recipe", recipeRoutes);
-app.use("/api/user", userRoutes);
-app.use("/api/tags", tagRoutes);
+app.use('/api/recipe', recipeRoutes);
+app.use('/api/user', userRoutes);
+app.use('/api/tags', tagRoutes);
 
 //connect to db
 console.log(MONGO);
 mongoose
   .connect(MONGO, {
-    dbName: "Epicure",
+    dbName: 'Epicure',
   })
   .then(() => {
-    console.log("Connected to MongoDB");
+    console.log('Connected to MongoDB');
     app.listen(PORT, () => {
       console.log(`listening on port ${PORT}`);
     });
@@ -51,8 +51,8 @@ mongoose
     console.log(err);
   });
 
-app.get("/", (req, res) => {
-  console.log("Bucket Name:", process.env.AWS_S3_BUCKET_NAME);
-  res.send("Hello World");
+app.get('/', (req, res) => {
+  console.log('Bucket Name:', process.env.AWS_S3_BUCKET_NAME);
+  res.send('Hello World');
   // res.send("Bucket Name:", process.env.AWS_S3_BUCKET_NAME);
 });

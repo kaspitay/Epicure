@@ -1,26 +1,26 @@
-const User = require("../models/userModel");
-const jwt = require("jsonwebtoken");
-const { v4: uuidv4 } = require("uuid");
-const fs = require("fs");
-const path = require("path");
+const User = require('../models/userModel');
+const jwt = require('jsonwebtoken');
+const { v4: uuidv4 } = require('uuid');
+const fs = require('fs');
+const path = require('path');
 
 async function saveBase64ImageLocally(base64Image) {
   // Extract the MIME type and base64 data
   const matches = base64Image.match(/^data:(.+);base64,(.+)$/);
 
   if (!matches || matches.length !== 3) {
-    throw new Error("Invalid base64 string");
+    throw new Error('Invalid base64 string');
   }
 
   const [, mimeType, base64Data] = matches;
 
   // Decode base64 data
-  const buffer = Buffer.from(base64Data, "base64");
+  const buffer = Buffer.from(base64Data, 'base64');
 
   // Generate a unique filename
-  const fileExtension = mimeType.split("/")[1];
+  const fileExtension = mimeType.split('/')[1];
   const filename = `${uuidv4()}.${fileExtension}`;
-  const filepath = path.join(__dirname, "../uploads/Profile", filename);
+  const filepath = path.join(__dirname, '../uploads/Profile', filename);
 
   try {
     fs.writeFileSync(filepath, buffer);
@@ -30,12 +30,12 @@ async function saveBase64ImageLocally(base64Image) {
   }
 }
 const createToken = (_id) => {
-  return jwt.sign({ _id }, process.env.JWT_SECRET, { expiresIn: "3d" });
+  return jwt.sign({ _id }, process.env.JWT_SECRET, { expiresIn: '3d' });
 };
 
 exports.getUsers = async (req, res) => {
   try {
-    const users = await User.where("userType").equals(1);
+    const users = await User.where('userType').equals(1);
     res.status(200).json({ users });
   } catch (err) {
     res.status(400).json({ message: err.message });
@@ -77,14 +77,7 @@ exports.SignupUser = async (req, res) => {
       profilePicture = await saveBase64ImageLocally(req.body.profilePicture);
     }
 
-    const user = await User.signup(
-      name,
-      email,
-      password,
-      userType,
-      bio,
-      profilePicture
-    );
+    const user = await User.signup(name, email, password, userType, bio, profilePicture);
 
     //create a token
     const token = createToken(user._id);
@@ -128,15 +121,13 @@ exports.SaveRecipe = async (req, res) => {
   const recipeId = recipe._id;
   try {
     const user = await User.findById(req.body.user._id);
-    if (cookbook === "favorites") {
+    if (cookbook === 'favorites') {
       user.favorites.push(recipeId);
       await user.save();
       res.status(201).json({ user });
       return;
     }
-    const cookbookIndex = user.books.findIndex(
-      (book) => book.name === cookbook
-    );
+    const cookbookIndex = user.books.findIndex((book) => book.name === cookbook);
     user.books[cookbookIndex].recipes.push(recipe);
     await user.save();
     res.status(201).json({ user });
@@ -153,18 +144,16 @@ exports.DeleteRecipe = async (req, res) => {
   const recipeId = recipe._id;
   try {
     const user = await User.findById(req.body.user._id);
-    if (cookbook === "favorites") {
-      user.favorites = user.favorites.filter((id) => id != recipeId);
+    if (cookbook === 'favorites') {
+      user.favorites = user.favorites.filter((id) => id.toString() !== recipeId.toString());
       await user.save();
       res.status(201).json({ user });
       return;
     }
-    const cookbookIndex = user.books.findIndex(
-      (book) => book.name === cookbook
+    const cookbookIndex = user.books.findIndex((book) => book.name === cookbook);
+    user.books[cookbookIndex].recipes = user.books[cookbookIndex].recipes.filter(
+      (recipe) => recipe._id.toString() !== recipeId.toString()
     );
-    user.books[cookbookIndex].recipes = user.books[
-      cookbookIndex
-    ].recipes.filter((recipe) => recipe._id != recipeId);
     await user.save();
     res.status(201).json({ user });
   } catch (error) {
@@ -175,7 +164,7 @@ exports.DeleteRecipe = async (req, res) => {
 
 //update chefs list
 exports.AddChefToList = async (req, res) => {
-  const { creatorId, user } = req.body;
+  const { creatorId } = req.body;
   try {
     const user = await User.findById(req.params.id);
     const creator = await User.findById(creatorId);
@@ -193,7 +182,7 @@ exports.DeleteChefFromList = async (req, res) => {
   const { creatorId } = req.body;
   try {
     const user = await User.findById(req.params.id);
-    user.chefs = user.chefs.filter((chef) => chef.ccId != creatorId);
+    user.chefs = user.chefs.filter((chef) => chef.ccId.toString() !== creatorId.toString());
     await user.save();
 
     res.status(200).json({ user });

@@ -1,10 +1,10 @@
-const Tag = require("../models/TagModel");
+const Tag = require('../models/TagModel');
 
 // Get all tags with optional filtering
 exports.getAllTags = async (req, res) => {
   try {
     const { category, popular, limit } = req.query;
-    let query = {};
+    const query = {};
 
     if (category) {
       query.category = category;
@@ -18,11 +18,11 @@ exports.getAllTags = async (req, res) => {
       .sort({ category: 1, name: 1 })
       .limit(parseInt(limit) || 0);
 
-    console.log("Returning tags from backend:", tags.length);
+    console.log('Returning tags from backend:', tags.length);
     res.status(200).json(tags);
   } catch (error) {
-    console.error("Error fetching tags:", error);
-    res.status(500).json({ error: "Failed to fetch tags" });
+    console.error('Error fetching tags:', error);
+    res.status(500).json({ error: 'Failed to fetch tags' });
   }
 };
 
@@ -43,7 +43,7 @@ exports.getTagsByCategory = async (req, res) => {
       tags,
       total,
       page: parseInt(page),
-      totalPages: Math.ceil(total / limit)
+      totalPages: Math.ceil(total / limit),
     });
   } catch (error) {
     res.status(500).json({ message: error.message });
@@ -54,9 +54,9 @@ exports.getTagsByCategory = async (req, res) => {
 exports.createTags = async (req, res) => {
   try {
     const { tags } = req.body;
-    
+
     if (!Array.isArray(tags)) {
-      return res.status(400).json({ message: "Tags must be an array" });
+      return res.status(400).json({ message: 'Tags must be an array' });
     }
 
     const createdTags = await Promise.all(
@@ -115,17 +115,17 @@ exports.getTagSuggestions = async (req, res) => {
   try {
     const { searchTerm } = req.query;
     if (!searchTerm) {
-      return res.status(400).json({ message: "Search term is required" });
+      return res.status(400).json({ message: 'Search term is required' });
     }
 
     const tags = await Tag.find({
       $or: [
         { name: { $regex: searchTerm, $options: 'i' } },
-        { description: { $regex: searchTerm, $options: 'i' } }
-      ]
+        { description: { $regex: searchTerm, $options: 'i' } },
+      ],
     })
-    .sort({ usageCount: -1 })
-    .limit(10);
+      .sort({ usageCount: -1 })
+      .limit(10);
 
     res.status(200).json(tags);
   } catch (error) {
@@ -139,39 +139,39 @@ exports.getTagStats = async (req, res) => {
     const stats = await Tag.aggregate([
       {
         $group: {
-          _id: "$category",
+          _id: '$category',
           count: { $sum: 1 },
-          totalUsage: { $sum: "$usageCount" },
+          totalUsage: { $sum: '$usageCount' },
           popularTags: {
             $push: {
-              name: "$name",
-              usageCount: "$usageCount"
-            }
-          }
-        }
+              name: '$name',
+              usageCount: '$usageCount',
+            },
+          },
+        },
       },
       {
         $project: {
-          category: "$_id",
+          category: '$_id',
           count: 1,
           totalUsage: 1,
           popularTags: {
             $slice: [
               {
                 $sortArray: {
-                  input: "$popularTags",
-                  sortBy: { usageCount: -1 }
-                }
+                  input: '$popularTags',
+                  sortBy: { usageCount: -1 },
+                },
               },
-              5
-            ]
-          }
-        }
-      }
+              5,
+            ],
+          },
+        },
+      },
     ]);
 
     res.status(200).json(stats);
   } catch (error) {
     res.status(500).json({ message: error.message });
   }
-}; 
+};

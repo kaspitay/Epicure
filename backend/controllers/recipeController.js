@@ -1,26 +1,26 @@
-const Recipe = require("../models/RecipeModel");
-const users = require("../models/userModel");
-const { v4: uuidv4 } = require("uuid");
-const fs = require("fs");
-const path = require("path");
+const Recipe = require('../models/RecipeModel');
+const users = require('../models/userModel');
+const { v4: uuidv4 } = require('uuid');
+const fs = require('fs');
+const path = require('path');
 
 async function saveBase64ImageLocally(base64Image) {
   // Extract the MIME type and base64 data
   const matches = base64Image.match(/^data:(.+);base64,(.+)$/);
 
   if (!matches || matches.length !== 3) {
-    throw new Error("Invalid base64 string");
+    throw new Error('Invalid base64 string');
   }
 
   const [, mimeType, base64Data] = matches;
 
   // Decode base64 data
-  const buffer = Buffer.from(base64Data, "base64");
+  const buffer = Buffer.from(base64Data, 'base64');
 
   // Generate a unique filename
-  const fileExtension = mimeType.split("/")[1];
+  const fileExtension = mimeType.split('/')[1];
   const filename = `${uuidv4()}.${fileExtension}`;
-  const filepath = path.join(__dirname, "../uploads/Food", filename);
+  const filepath = path.join(__dirname, '../uploads/Food', filename);
 
   try {
     fs.writeFileSync(filepath, buffer);
@@ -35,8 +35,8 @@ exports.getRecipes = async (req, res) => {
     const recipeStream = await Recipe.find().cursor();
 
     res.writeHead(200, {
-      "Content-Type": "application/json",
-      "Transfer-Encoding": "chunked",
+      'Content-Type': 'application/json',
+      'Transfer-Encoding': 'chunked',
     });
 
     res.write('{"recipes":[');
@@ -44,7 +44,7 @@ exports.getRecipes = async (req, res) => {
     let isFirst = true;
     for await (const recipe of recipeStream) {
       if (!isFirst) {
-        res.write(",");
+        res.write(',');
       }
       isFirst = false;
 
@@ -52,7 +52,7 @@ exports.getRecipes = async (req, res) => {
       res.write(chunk);
     }
 
-    res.write("]}");
+    res.write(']}');
     res.end();
   } catch (err) {
     res.status(400).json({ message: err.message });
@@ -71,8 +71,7 @@ exports.getRecipe = async (req, res) => {
 
 //create recipe
 exports.createRecipe = async (req, res) => {
-  const { title, description, ingredients, steps, tags, user, userId } =
-    req.body;
+  const { title, description, ingredients, steps, tags, user, userId } = req.body;
 
   let image, photos;
   try {
@@ -122,27 +121,18 @@ exports.createRecipe = async (req, res) => {
 
     res.status(201).json({ recipe: savedRecipe, user });
   } catch (err) {
-    console.error("Error in createRecipe:", err);
+    console.error('Error in createRecipe:', err);
     res.status(400).json({ message: err.message });
   }
 };
 
 //update recipe
 exports.updateRecipe = async (req, res) => {
-  const {
-    title,
-    image,
-    description,
-    ingredients,
-    steps,
-    tags,
-    photos,
-    userid,
-  } = req.body;
+  const { title, image, description, ingredients, steps, tags, photos } = req.body;
   try {
     const recipe = await Recipe.findByIdAndUpdate(
       req.params.id,
-      { title, instructions },
+      { title, image, description, ingredients, steps, tags, photos },
       { new: true }
     );
     res.status(200).json({ recipe });
@@ -155,7 +145,7 @@ exports.updateRecipe = async (req, res) => {
 exports.deleteRecipe = async (req, res) => {
   try {
     await Recipe.findByIdAndDelete(req.params.id);
-    res.status(200).json({ message: "Recipe deleted" });
+    res.status(200).json({ message: 'Recipe deleted' });
   } catch (err) {
     res.status(400).json({ message: err.message });
   }
