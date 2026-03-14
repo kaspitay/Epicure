@@ -38,9 +38,9 @@ A modern recipe sharing platform where food enthusiasts can discover, save, and 
 
 ## Prerequisites
 
-- Node.js 18+
+- Node.js 18+ (or Docker)
 - npm or yarn
-- MongoDB Atlas account (or local MongoDB)
+- MongoDB Atlas account (or local MongoDB / Docker)
 
 ## Installation
 
@@ -116,6 +116,26 @@ npm run build
 cd frontend
 npm run build
 ```
+
+### Docker (Recommended)
+
+Run the entire stack with one command:
+
+```bash
+# Production mode
+docker-compose up -d
+
+# Development mode (with hot reload)
+docker-compose -f docker-compose.yml -f docker-compose.dev.yml up
+
+# Stop all containers
+docker-compose down
+```
+
+Services:
+- **Frontend:** http://localhost (port 80)
+- **Backend API:** http://localhost:3000
+- **MongoDB:** localhost:27017
 
 ## Testing
 

@@ -1,0 +1,57 @@
+version: '3.8'
+
+services:
+  # MongoDB Database
+  mongodb:
+    image: mongo:7
+    container_name: epicure-mongodb
+    ports:
+      - "27017:27017"
+    volumes:
+      - mongodb_data:/data/db
+    environment:
+      - MONGO_INITDB_DATABASE=epicure
+    networks:
+      - epicure-network
+
+  # Backend API
+  backend:
+    build:
+      context: ./backend
+      dockerfile: Dockerfile
+    container_name: epicure-backend
+    ports:
+      - "3000:3000"
+    environment:
+      - PORT=3000
+      - MONGODB_URI=mongodb://mongodb:27017/epicure
+      - JWT_SECRET=your_jwt_secret_change_in_production
+      - NODE_ENV=development
+    depends_on:
+      - mongodb
+    volumes:
+      - ./backend/uploads:/app/uploads
+    networks:
+      - epicure-network
+    restart: unless-stopped
+
+  # Frontend
+  frontend:
+    build:
+      context: ./frontend
+      dockerfile: Dockerfile
+    container_name: epicure-frontend
+    ports:
+      - "80:80"
+    depends_on:
+      - backend
+    networks:
+      - epicure-network
+    restart: unless-stopped
+
+volumes:
+  mongodb_data:
+
+networks:
+  epicure-network:
+    driver: bridge
