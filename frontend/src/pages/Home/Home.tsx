@@ -1,77 +1,77 @@
-import PageHeader from "../../components/common/PageHeader/PageHeader";
-import { Link } from "react-router-dom";
-import { useState, useEffect } from "react";
-import axios from "axios";
 import SearchResultsList from "../../components/SearchResultsList";
 import { useRecipeContext } from "../../context/RecipeContext";
-import { useAuthContext } from "../../hooks/useAuthContext";
-import { Navigate } from "react-router-dom";
+import { motion } from "framer-motion";
 
 const Home = () => {
-  
-  const { recipes } = useRecipeContext();
-  const { user} = useAuthContext();
-  const { loading } = useRecipeContext();
+  const { recipes, loading } = useRecipeContext();
 
   if (loading) {
     return (
-      <div className="loading-spinner-container">
-        <div className="app-name">Epicure</div>
-        <div className="loader"></div>
+      <div className="flex items-center justify-center h-64">
+        <div className="flex flex-col items-center gap-4">
+          <div className="w-12 h-12 border-4 border-[#BE6F50] border-t-transparent rounded-full animate-spin" />
+          <p className="text-gray-400">Loading recipes...</p>
+        </div>
       </div>
     );
   }
 
+  // Filter recipes by tags
+  const filterByTag = (tagName: string) =>
+    recipes.filter((recipe) =>
+      recipe.tags?.some((tag) => tag.tag === tagName)
+    ).slice(0, 10);
+
+  const dessertRecipes = filterByTag("Dessert");
+  const italianRecipes = filterByTag("Italian");
+  const asianRecipes = recipes.filter((recipe) =>
+    recipe.tags?.some((tag) => ["Thai", "Japanese", "Chinese"].includes(tag.tag))
+  ).slice(0, 10);
+
   return (
-    <div className="w-full h-full rounded-lg">
-      <div className="h-full grid grid-row-10 rounded-lg bg-[#1E1C1A]">
-        <div className="row-span-3">
-          <PageHeader HeaderName={user ? "Welcome, " + user.user.name : null} />
-        </div>
+    <motion.div
+      initial={{ opacity: 0 }}
+      animate={{ opacity: 1 }}
+      transition={{ duration: 0.3 }}
+      className="space-y-2"
+    >
+      {/* Featured/Top Recipes */}
+      <SearchResultsList
+        title="Popular Recipes"
+        results={recipes.slice(0, 10)}
+      />
 
-        {/* make the section scrollable*/}
-        <div className="row-span-9 overflow-y-auto scrollbar-none ">
-          <div
-            className=" grid grid-rows-2  bg-[#1E1C1A]
-            text-white text-lg px-10 rounded-lg md:gap-5 lg:gap-5"
-          >
-            {/* Top 10 Section */}
+      {/* Italian Cuisine */}
+      {italianRecipes.length > 0 && (
+        <SearchResultsList
+          title="Italian Cuisine"
+          results={italianRecipes}
+        />
+      )}
 
-            <SearchResultsList title="Top 10" results={recipes.slice(0, 10)} />
+      {/* Asian Flavors */}
+      {asianRecipes.length > 0 && (
+        <SearchResultsList
+          title="Asian Flavors"
+          results={asianRecipes}
+        />
+      )}
 
-            {/* Breakfast Section */}
-            <SearchResultsList
-              title="Breakfast"
-              results={recipes
-                .filter((recipe) => {
-                  return recipe.tags.some((tag) => tag.tag === "Breakfast");
-                })
-                .slice(0, 10)}
-            />
+      {/* Desserts */}
+      {dessertRecipes.length > 0 && (
+        <SearchResultsList
+          title="Sweet Treats"
+          results={dessertRecipes}
+        />
+      )}
 
-            {/* Main Dishes Section */}
-            <SearchResultsList
-              title="Main Dishes"
-              results={recipes
-                .filter((recipe) => {
-                  return recipe.tags.some((tag) => tag.tag === "Main Dishes");
-                })
-                .slice(0, 10)}
-            />
-
-            {/* Desserts Section */}
-            <SearchResultsList
-              title="Desserts"
-              results={recipes
-                .filter((recipe) => {
-                  return recipe.tags.some((tag) => tag.tag === "Desserts");
-                })
-                .slice(0, 10)}
-            />
-          </div>
-        </div>
-      </div>
-    </div>
+      {/* All Recipes Grid */}
+      <SearchResultsList
+        title="All Recipes"
+        results={recipes}
+        useGrid={true}
+      />
+    </motion.div>
   );
 };
 

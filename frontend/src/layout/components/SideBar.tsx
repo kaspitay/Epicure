@@ -1,4 +1,3 @@
-import { useState } from "react";
 import Menu from "./Menu";
 import CookBooks from "./CookBooks";
 import Chefs from "./Chefs";
@@ -6,15 +5,11 @@ import { motion, AnimatePresence } from "framer-motion";
 import { FaChevronLeft, FaChevronRight } from "react-icons/fa";
 import { ImBooks } from "react-icons/im";
 import { LuChefHat } from "react-icons/lu";
-import { Link } from "react-router-dom";
+import { useSidebarContext } from "../../context/SidebarContext";
 
 const Sidebar = () => {
-  const [isExpanded, setIsExpanded] = useState(true);
+  const { isExpanded, toggleSidebar, setIsExpanded } = useSidebarContext();
 
-  const toggleSidebar = () => {
-    setIsExpanded(!isExpanded);
-  };
-  
   const expandSidebar = () => {
     setIsExpanded(true);
   };
@@ -23,7 +18,7 @@ const Sidebar = () => {
     <div className={`${isExpanded ? 'w-[334px]' : 'w-[80px]'} h-screen bg-[#1E1C1A] shadow-2xl border-r border-[#BE6F50]/10 relative transition-all duration-300`}>
       <button
         onClick={toggleSidebar}
-        className="absolute right-0 top-1/2 -translate-y-1/2 -translate-x-1/2 z-10 bg-[#1E1C1A] p-2 rounded-full border border-[#BE6F50]/20 hover:bg-[#BE6F50]/10 transition-colors duration-200"
+        className="absolute -right-3 top-1/2 -translate-y-1/2 z-10 bg-[#1E1C1A] p-2 rounded-full border border-[#BE6F50]/20 hover:bg-[#BE6F50]/10 transition-colors duration-200 shadow-lg"
       >
         {isExpanded ? <FaChevronLeft className="text-[#BE6F50]" /> : <FaChevronRight className="text-[#BE6F50]" />}
       </button>
@@ -57,8 +52,8 @@ const Sidebar = () => {
           ) : (
             <div className="flex flex-col items-center gap-4 mt-6">
               <div className="sidebar-icon-container">
-                <div 
-                  className="sidebar-icon cursor-pointer" 
+                <div
+                  className="sidebar-icon cursor-pointer"
                   title="Cookbooks"
                   onClick={expandSidebar}
                 >
@@ -66,8 +61,8 @@ const Sidebar = () => {
                 </div>
               </div>
               <div className="sidebar-icon-container">
-                <div 
-                  className="sidebar-icon cursor-pointer" 
+                <div
+                  className="sidebar-icon cursor-pointer"
                   title="Chefs"
                   onClick={expandSidebar}
                 >

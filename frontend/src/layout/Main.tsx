@@ -1,10 +1,12 @@
 import { Outlet } from "react-router-dom";
 import Sidebar from "./components/SideBar";
 import { useAuthContext } from "../hooks/useAuthContext";
+import { SidebarProvider, useSidebarContext } from "../context/SidebarContext";
 
-const Main = () => {
+const MainContent = () => {
   const { user } = useAuthContext();
-  
+  const { isExpanded } = useSidebarContext();
+
   return (
     <div className="min-h-screen bg-gradient-to-br from-[#0A0A0A] to-[#1A1A1A]">
       <div className="flex h-screen">
@@ -12,9 +14,13 @@ const Main = () => {
         <div className="fixed left-0 top-0 h-full z-20">
           <Sidebar />
         </div>
-        
-        {/* Main Content Area */}
-        <div className="flex-1 ml-[334px] h-full flex flex-col">
+
+        {/* Main Content Area - responsive to sidebar */}
+        <div
+          className={`flex-1 h-full flex flex-col transition-all duration-300 ${
+            isExpanded ? 'ml-[334px]' : 'ml-[80px]'
+          }`}
+        >
           {/* Header */}
           <header className="sticky top-0 z-10 bg-[#1E1C1A]/80 backdrop-blur-md border-b border-[#BE6F50]/20">
             <div className="flex items-center justify-between px-6 py-4">
@@ -35,6 +41,14 @@ const Main = () => {
         </div>
       </div>
     </div>
+  );
+};
+
+const Main = () => {
+  return (
+    <SidebarProvider>
+      <MainContent />
+    </SidebarProvider>
   );
 };
 
