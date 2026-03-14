@@ -2,11 +2,13 @@
 
 A modern recipe sharing platform where food enthusiasts can discover, save, and share culinary creations.
 
+![CI](https://github.com/kaspitay/Epicure/actions/workflows/ci.yml/badge.svg)
 ![React](https://img.shields.io/badge/React-18.2-blue?logo=react)
 ![TypeScript](https://img.shields.io/badge/TypeScript-5.9-blue?logo=typescript)
-![Node.js](https://img.shields.io/badge/Node.js-18+-green?logo=node.js)
+![Node.js](https://img.shields.io/badge/Node.js-20+-green?logo=node.js)
 ![MongoDB](https://img.shields.io/badge/MongoDB-Atlas-green?logo=mongodb)
 ![Tailwind CSS](https://img.shields.io/badge/Tailwind-3.4-blue?logo=tailwindcss)
+![Docker](https://img.shields.io/badge/Docker-Ready-blue?logo=docker)
 
 ## Features
 
@@ -70,7 +72,7 @@ Create `.env` files in both `backend` and `frontend` directories:
 **backend/.env**
 ```env
 PORT=3000
-MONGODB_URI=mongodb+srv://<username>:<password>@<cluster>.mongodb.net/epicure
+MONGO_URI=mongodb+srv://<username>:<password>@<cluster>.mongodb.net/epicure
 JWT_SECRET=your_jwt_secret_key
 NODE_ENV=development
 ```
