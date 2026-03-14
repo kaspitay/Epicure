@@ -1,7 +1,10 @@
 # Frontend Development Dockerfile
-FROM node:18-alpine
+FROM node:20-alpine
 
 WORKDIR /app
+
+# Use public npm registry
+RUN npm config set registry https://registry.npmjs.org/
 
 # Install dependencies
 COPY package*.json ./

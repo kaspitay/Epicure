@@ -1,11 +1,14 @@
 # Frontend Dockerfile
-FROM node:18-alpine AS builder
+FROM node:20 AS builder
 
 WORKDIR /app
 
-# Install dependencies
-COPY package*.json ./
-RUN npm ci
+# Use public npm registry
+RUN npm config set registry https://registry.npmjs.org/
+
+# Install dependencies (use npm install to get correct platform binaries)
+COPY package.json ./
+RUN npm install
 
 # Copy source code
 COPY . .

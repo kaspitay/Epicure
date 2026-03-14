@@ -47,6 +47,7 @@ This document outlines completed work and future plans for the Epicure project.
   - Run frontend tests (Vitest)
   - Build check for both projects
   - Docker build verification
+- [x] Docker setup tested and working locally
 - [ ] Create CD workflow for main branch
   - Build Docker images
   - Push to container registry

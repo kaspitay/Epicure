@@ -1,11 +1,14 @@
 # Backend Dockerfile
-FROM node:18-alpine
+FROM node:20-alpine
 
 WORKDIR /app
 
-# Install dependencies first (better caching)
-COPY package*.json ./
-RUN npm ci
+# Use public npm registry
+RUN npm config set registry https://registry.npmjs.org/
+
+# Install dependencies (use npm install for correct platform binaries)
+COPY package.json ./
+RUN npm install
 
 # Copy source code
 COPY . .
