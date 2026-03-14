@@ -42,10 +42,9 @@ const CookBooks = () => {
         >
           <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-5 gap-x-4 gap-y-4 mt-5 lg:mt-3 mb-10">
             {/* Recipe Cards */}
-            {filteredRecipes.map((recipe, index) => (
-              <div className="flex flex-col justify-center items-center text-white">
+            {filteredRecipes.map((recipe, _index) => (
+              <div key={recipe._id} className="flex flex-col justify-center items-center text-white">
                 <Link
-                  key={recipe._id}
                   to={`/recipe/${recipe._id}`}
                   className="flex flex-col items-start mt-4"
                 >

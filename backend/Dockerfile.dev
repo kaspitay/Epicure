@@ -1,0 +1,19 @@
+# Backend Development Dockerfile
+FROM node:20-alpine
+
+WORKDIR /app
+
+# Use public npm registry
+RUN npm config set registry https://registry.npmjs.org/
+
+# Install dependencies
+COPY package*.json ./
+RUN npm ci
+
+# Copy source (will be overridden by volume mount)
+COPY . .
+
+EXPOSE 3000
+
+# Development command with hot reload
+CMD ["npm", "run", "dev:watch"]

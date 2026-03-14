@@ -165,7 +165,7 @@ const TagSelector = ({ tags, setTags, maxTags, availableTags, isLoading, errorMe
           
           {isTagLimitReached && (
             <p className="text-yellow-500 text-sm mt-1">
-              You've reached the maximum of {maxTags} tags.
+              You&apos;ve reached the maximum of {maxTags} tags.
             </p>
           )}
         </>

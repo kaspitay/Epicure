@@ -69,7 +69,7 @@ const RecipeForm = ({
   
   const formProgress = useMemo(() => {
     let completed = 0;
-    let total = 6; // Name, Image, Description, Ingredients, Steps, Tags
+    const totalSteps = 6; // Name, Image, Description, Ingredients, Steps, Tags
     
     if (recipeName.trim()) completed++;
     if (imageBase64) completed++;
@@ -78,7 +78,7 @@ const RecipeForm = ({
     if (stepFields.length > 0 && stepFields.every(step => step.description)) completed++;
     if (tags.length > 0) completed++;
     
-    return Math.floor((completed / total) * 100);
+    return Math.floor((completed / totalSteps) * 100);
   }, [recipeName, imageBase64, description, ingredientFields, stepFields, tags]);
   
   return (
@@ -249,7 +249,7 @@ const RecipeForm = ({
         
         {isIngredientLimitReached && (
           <p className="text-yellow-500 text-sm mt-1">
-            You've reached the maximum of {maxIngredients} ingredients.
+            You&apos;ve reached the maximum of {maxIngredients} ingredients.
           </p>
         )}
       </div>
@@ -440,7 +440,7 @@ const RecipeForm = ({
             
             {isTagLimitReached && (
               <p className="text-yellow-500 text-sm mt-1">
-                You've reached the maximum of {maxTags} tags.
+                You&apos;ve reached the maximum of {maxTags} tags.
               </p>
             )}
           </>
