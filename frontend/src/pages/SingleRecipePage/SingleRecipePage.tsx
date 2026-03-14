@@ -10,10 +10,10 @@ import Ingredients from "./Ingredients/Ingredients";
 import Steps from "./Steps/Steps";
 import Premium from "./Premium/Premium";
 import "./SingleRecipePage.css";
-import axios from "axios";
 import { useRecipeContext } from "../../context/RecipeContext";
 import { useAuthContext } from "../../hooks/useAuthContext";
-import BASE_URL from "./../../config";
+import { userApi } from "../../api";
+import { Recipe } from "../../types";
 
 const SingleRecipePage = () => {
   const { recipeid } = useParams();
@@ -104,25 +104,21 @@ const SingleRecipePage = () => {
       handleDelete(cookbook);
     }
   };
-  const handleSave = async (cookbook) => {
+  const handleSave = async (cookbook: string) => {
+    if (!user || !recipe) return;
     try {
-      const response = await axios.post(`${BASE_URL}/user/save_recipe`, {
-        recipe: recipe,
-        cookbook: cookbook,
+      const updatedUser = await userApi.saveRecipe({
+        recipe: recipe as Recipe,
+        cookbook,
         user: user.user,
       });
-      if (response.status === 201) {
-        // Get updated user data from response
-        const updatedUser = response.data;
-        dispatch({ type: "UPDATE_USER", payload: updatedUser });
-        if (cookbook == 'favorites') {
-          setLiked(!liked);
-        }
-        localStorage.setItem("user", JSON.stringify(updatedUser));
-      } else {
-        console.error("Error deleting cookbook:", response.statusText);
+      dispatch({ type: "UPDATE_USER", payload: updatedUser });
+      if (cookbook === 'favorites') {
+        setLiked(!liked);
       }
+      localStorage.setItem("user", JSON.stringify(updatedUser));
     } catch (error) {
+      console.error("Error saving recipe:", error);
     }
   };
   const handleClick = (cookbook) => {
@@ -133,24 +129,16 @@ const SingleRecipePage = () => {
     }
   };
 
-  const handleDelete = async (cookbook) => {
-    // Your delete logic
+  const handleDelete = async (cookbook: string) => {
+    if (!user || !recipe) return;
     setLiked(false);
 
     try {
-      const response = await axios.delete(`${BASE_URL}/user/delete_recipe`, {
-        data: { recipe: recipe, cookbook: cookbook, user: user.user },
-      });
-      if (response.status === 201) {
-        // Get updated user data from response
-        const updatedUser = response.data;
-        dispatch({ type: "UPDATE_USER", payload: updatedUser });
-
-        localStorage.setItem("user", JSON.stringify(updatedUser));
-      } else {
-        console.error("Error deleting cookbook:", response.statusText);
-      }
+      const updatedUser = await userApi.deleteRecipe(recipe as Recipe, cookbook, user.user);
+      dispatch({ type: "UPDATE_USER", payload: updatedUser });
+      localStorage.setItem("user", JSON.stringify(updatedUser));
     } catch (error) {
+      console.error("Error deleting recipe:", error);
     }
   };
 

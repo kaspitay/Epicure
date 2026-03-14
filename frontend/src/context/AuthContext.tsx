@@ -1,6 +1,5 @@
 import { createContext, useReducer, useEffect, useState, ReactNode } from 'react';
-import axios from 'axios';
-import BASE_URL from '../config';
+import { userApi } from '../api';
 import { AuthContextType, AuthAction, LoginResponse, User } from '../types';
 
 interface AuthState {
@@ -51,8 +50,8 @@ export const AuthContextProvider = ({ children }: AuthContextProviderProps) => {
   useEffect(() => {
     const fetchData = async () => {
       try {
-        const response = await axios.get<{ users: User[] }>(`${BASE_URL}/user`);
-        setUsers(response.data.users);
+        const data = await userApi.getAllUsers();
+        setUsers(data);
       } catch (error) {
         console.error('Error fetching data:', error);
       }

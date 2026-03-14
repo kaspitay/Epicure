@@ -5,56 +5,53 @@ import { useNavigate, useMatch } from "react-router-dom";
 
 import { Link } from "react-router-dom";
 import { useAuthContext } from "../../hooks/useAuthContext";
-import { useState } from "react";
-import axios from "axios";
-import BASE_URL from "./../../config"; // Adjust the path as needed
+import { useState, FormEvent } from "react";
+import { userApi } from "../../api";
 
-export default function CookBooks({ isExpanded = true }) {
-  const { user } = useAuthContext();
-  const { dispatch } = useAuthContext();
+interface CookBooksProps {
+  isExpanded?: boolean;
+}
+
+export default function CookBooks({ isExpanded = true }: CookBooksProps) {
+  const { user, dispatch } = useAuthContext();
   const navigate = useNavigate();
   const match = useMatch("/cook_books/:id/:title");
-  const [showContent, setShowContent] = useState(true); // State variable to track visibility
+  const [showContent, setShowContent] = useState(true);
   const [error, setError] = useState(false);
   const [errorMessage, setErrorMessage] = useState("");
 
   const toggleContent = () => {
-    setShowContent(!showContent); // Toggle visibility state
-    setError(false); // Reset error state
+    setShowContent(!showContent);
+    setError(false);
   };
 
-  const deleteCookbook = async (name) => {
-    const cookbookName = name;
+  const deleteCookbook = async (name: string) => {
+    if (!user) return;
     try {
-      const response = await axios.delete(`${BASE_URL}/user/cookbook`, {
-        data: { name: cookbookName, user: user.user },
-      });
+      const updatedUser = await userApi.deleteCookbook(name, user.user);
+      dispatch({ type: "UPDATE_USER", payload: updatedUser });
+      localStorage.setItem("user", JSON.stringify(updatedUser));
 
-      if (response.status === 201) {
-        const updatedUser = response.data;
-        dispatch({ type: "UPDATE_USER", payload: updatedUser });
-        localStorage.setItem("user", JSON.stringify(updatedUser));
-
-        if (match && match.params.title === name) {
-          navigate("/"); // Navigate to home page
-        }
-      } else {
-        console.error("Error deleting cookbook:", response.statusText);
+      if (match && match.params.title === name) {
+        navigate("/");
       }
-    } catch (error) {
-      console.log(error);
+    } catch (err) {
+      console.error("Error deleting cookbook:", err);
     }
   };
 
-  const makeNewCookbook = async (e) => {
+  const makeNewCookbook = async (e: FormEvent<HTMLFormElement>) => {
     e.preventDefault();
+    if (!user) return;
 
-    if (!e.target.cookbookName.value) {
+    const form = e.target as HTMLFormElement;
+    const cookbookName = (form.elements.namedItem("cookbookName") as HTMLInputElement).value;
+
+    if (!cookbookName) {
       setErrorMessage("Please enter a cookbook name");
       setError(true);
       return;
     }
-    const cookbookName = e.target.cookbookName.value;
 
     const cookbookExists = user.user.books.some(
       (cookbook) => cookbook.name === cookbookName
@@ -67,24 +64,18 @@ export default function CookBooks({ isExpanded = true }) {
     setError(false);
 
     try {
-      const response = await axios.post(`${BASE_URL}/user/cookbook`, {
+      const updatedUser = await userApi.createCookbook({
         name: cookbookName,
         user: user.user,
       });
 
-      if (response.status === 201) {
-        const updatedUser = response.data;
+      localStorage.setItem("user", JSON.stringify(updatedUser));
+      dispatch({ type: "UPDATE_USER", payload: updatedUser });
 
-        localStorage.setItem("user", JSON.stringify(updatedUser));
-        dispatch({ type: "UPDATE_USER", payload: updatedUser });
-
-        e.target.cookbookName.value = "";
-        toggleContent();
-      } else {
-        console.error("Error creating new cookbook:", response.statusText);
-      }
-    } catch (error) {
-      console.log(error);
+      (form.elements.namedItem("cookbookName") as HTMLInputElement).value = "";
+      toggleContent();
+    } catch (err) {
+      console.error("Error creating cookbook:", err);
     }
   };
 

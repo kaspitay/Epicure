@@ -1,7 +1,6 @@
 import { createContext, useContext, useState, useEffect, ReactNode } from 'react';
-import axios from 'axios';
-import BASE_URL from '../config';
-import { Recipe, RecipesResponse } from '../types';
+import { recipeApi } from '../api';
+import { Recipe } from '../types';
 
 interface RecipeContextType {
   recipes: Recipe[];
@@ -31,8 +30,8 @@ export const RecipeProvider = ({ children }: RecipeProviderProps) => {
     const fetchData = async () => {
       setLoading(true);
       try {
-        const response = await axios.get<RecipesResponse>(`${BASE_URL}/recipe`);
-        setRecipes(response.data.recipes);
+        const data = await recipeApi.getAll();
+        setRecipes(data);
       } catch (error) {
         console.error('Error fetching data:', error);
       }

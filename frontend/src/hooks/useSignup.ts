@@ -1,7 +1,7 @@
 import { useState } from 'react';
 import { useAuthContext } from './useAuthContext';
-import BASE_URL from '../config';
-import { LoginResponse } from '../types';
+import { userApi } from '../api';
+import { AxiosError } from 'axios';
 
 interface UseSignupReturn {
   error: string | null;
@@ -32,35 +32,23 @@ export const useSignup = (): UseSignupReturn => {
     setLoading(true);
     setError(null);
     try {
-      const response = await fetch(`${BASE_URL}/user/signup`, {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({
-          name,
-          email,
-          password,
-          userType,
-          bio,
-          profilePicture,
-        }),
+      const data = await userApi.signup({
+        name,
+        email,
+        password,
+        userType,
+        bio,
+        profilePicture,
       });
-      const data = await response.json();
-      if (response.ok) {
-        localStorage.setItem('user', JSON.stringify(data));
-        dispatch({ type: 'LOGIN', payload: data as LoginResponse });
-        setLoading(false);
-        return true;
-      } else {
-        setLoading(false);
-        setError(data.message || 'An error occurred. Please try again.');
-        return false;
-      }
-    } catch {
-      setLoading(false);
-      setError('An error occurred. Please try again.');
+      localStorage.setItem('user', JSON.stringify(data));
+      dispatch({ type: 'LOGIN', payload: data });
+      return true;
+    } catch (err) {
+      const axiosError = err as AxiosError<{ message?: string }>;
+      setError(axiosError.response?.data?.message || 'An error occurred. Please try again.');
       return false;
+    } finally {
+      setLoading(false);
     }
   };
 

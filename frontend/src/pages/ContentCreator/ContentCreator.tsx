@@ -6,9 +6,8 @@ import { FaEdit, FaHeart, FaRegHeart } from "react-icons/fa";
 import { Link, useParams } from "react-router-dom";
 import { useAuthContext } from "../../hooks/useAuthContext";
 import { useRecipeContext } from "../../context/RecipeContext";
-import axios from "axios";
+import { userApi } from "../../api";
 import "./ContentCreator.css";
-import BASE_URL from "./../../config"; // Adjust the path as needed
 
 const ContentCreator = () => {
   const [activeFilter, setActiveFilter] = useState("About");
@@ -68,40 +67,25 @@ const ContentCreator = () => {
   };
 
   const handleHeartToggle = async () => {
-    let response;
-    if (loading) return;
+    if (loading || !user || !creator) return;
     setIsInChefsList(!isInChefsList);
-    try {
-      if (!isInChefsList && !loading) {
-        setLoading(true);
-        response = await axios.post(
-          `${BASE_URL}/user/add_chefs_list/${user.user._id}`,
-          { creatorId: creator._id, user: user.user }
-        );
-      } else if (isInChefsList && !loading) {
-        setLoading(true);
-        response = await axios.delete(
-          `${BASE_URL}/user/remove_chefs_list/${user.user._id}`,
-          {
-            data: { creatorId: creator._id, user: user.user },
-          }
-        );
-      }
-      setLoading(false);
+    setLoading(true);
 
-      const updatedUser = response.data;
-      if (response.status === 200) {
-        dispatch({
-          type: "UPDATE_USER",
-          payload: updatedUser,
-        });
-        localStorage.setItem("user", JSON.stringify(updatedUser));
+    try {
+      let updatedUser;
+      if (!isInChefsList) {
+        updatedUser = await userApi.addToChefsList(user.user._id, creator._id, user.user);
       } else {
-        setIsInChefsList(!isInChefsList);
+        updatedUser = await userApi.removeFromChefsList(user.user._id, creator._id, user.user);
       }
+
+      dispatch({ type: "UPDATE_USER", payload: updatedUser });
+      localStorage.setItem("user", JSON.stringify(updatedUser));
     } catch (error) {
       console.error("Error updating chef's list:", error);
       setIsInChefsList(!isInChefsList);
+    } finally {
+      setLoading(false);
     }
   };
 

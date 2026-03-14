@@ -1,6 +1,5 @@
-import React, { useState, useEffect } from 'react';
-import axios from 'axios';
-import BASE_URL from '../config';
+import { useState, useEffect } from 'react';
+import { tagApi } from '../api';
 import { TAG_CATEGORIES } from '../constants';
 
 const TagInspector = () => {
@@ -22,9 +21,9 @@ const TagInspector = () => {
       try {
         setLoading(true);
         addLog('Fetching tags from API...');
-        
-        const response = await axios.get(`${BASE_URL}/api/tags`);
-        addLog(`Received ${response.data.length} tags from API`);
+
+        const tagsData = await tagApi.getAll();
+        addLog(`Received ${tagsData.length} tags from API`);
         
         // Group tags by category
         const tagsByCategory = {};
@@ -35,7 +34,7 @@ const TagInspector = () => {
         });
         
         // Add tags to categories
-        response.data.forEach(tag => {
+        tagsData.forEach(tag => {
           if (tag.category && tagsByCategory[tag.category]) {
             tagsByCategory[tag.category].push(tag);
           } else if (tag.category) {

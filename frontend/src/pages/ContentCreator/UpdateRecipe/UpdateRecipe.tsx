@@ -1,10 +1,9 @@
 import { useState } from "react";
 import { IoMdAddCircle } from "react-icons/io";
 import { FaMinusCircle } from "react-icons/fa";
-import axios from "axios";
 import foodMeasurements from "../AddRecipe/foodMeasurements";
 import foodTags from "../AddRecipe/foodTags";
-import BASE_URL from '../config';  // Adjust the path as needed
+import { recipeApi } from "../../../api";
 
 
 
@@ -159,9 +158,8 @@ const UpdateRecipe = () => {
   const handleSubmit = async (e) => {
     e.preventDefault();
 
-
     try {
-      const response = await axios.post(`${BASE_URL}/recipe`, {
+      await recipeApi.update('', {
         title: recipeName,
         image: imageBase64,
         description: description,
@@ -171,7 +169,7 @@ const UpdateRecipe = () => {
         photos: extraImages
       });
     } catch (error) {
-      console.error('Error posting recipe:', error.response ? error.response.data : error.message);
+      console.error('Error posting recipe:', error);
     }
   };
 

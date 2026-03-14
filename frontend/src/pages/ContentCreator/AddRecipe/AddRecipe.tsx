@@ -1,11 +1,9 @@
 import { useState, useRef, useEffect } from "react";
-import axios from "axios";
 import { useAuthContext } from "../../../hooks/useAuthContext";
 import { useRecipeContext } from "../../../context/RecipeContext";
-import BASE_URL from "./../../../config"; // Adjust the path as needed
+import { recipeApi, tagApi } from "../../../api";
 import RecipeForm from "../../../layout/components/RecipeForm";
 import TagSelector from "./TagSelector";
-// Import the tag categories from the centralized constants
 import { TAG_CATEGORIES } from "../../../constants";
 
 const AddRecipe = ({ onRecipeAdded }) => {
@@ -62,19 +60,19 @@ const AddRecipe = ({ onRecipeAdded }) => {
     const fetchTags = async () => {
       try {
         setIsLoading(true);
-        const response = await axios.get(`${BASE_URL}/api/tags`);
-        console.log("API response tags:", response.data);
-        
+        const tagsData = await tagApi.getAll();
+        console.log("API response tags:", tagsData);
+
         // Organize tags by category
         const tagsByCategory = {};
-        
+
         // Initialize with empty arrays for each category to ensure all categories are shown
         Object.keys(TAG_CATEGORIES).forEach(category => {
           tagsByCategory[category] = [];
         });
-        
+
         // Add tags to their respective categories
-        response.data.forEach(tag => {
+        tagsData.forEach(tag => {
           if (tag.category && tagsByCategory[tag.category]) {
             tagsByCategory[tag.category].push(tag);
           } else if (tag.category) {
@@ -536,19 +534,19 @@ const AddRecipe = ({ onRecipeAdded }) => {
       };
 
       // Make the API request to create the recipe
-      const response = await axios.post(`${BASE_URL}/api/recipe`, recipeData);
-      
+      const newRecipe = await recipeApi.create(recipeData);
+
       // Increment usage count for each tag
       for (const tag of tags) {
         try {
-          await axios.post(`${BASE_URL}/api/tags/increment`, { tagName: tag.name });
+          await tagApi.incrementUsage(tag.name);
         } catch (error) {
           console.error(`Error incrementing tag usage for ${tag.name}:`, error);
         }
       }
 
       if (onRecipeAdded) {
-        onRecipeAdded(response.data.recipe);
+        onRecipeAdded(newRecipe);
       }
 
       // Reset form after successful submission
