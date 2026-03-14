@@ -1,9 +1,6 @@
-import top10Img1 from "../../assets/images/top-10(img-1).png";
 import { Link } from "react-router-dom";
 import PageHeader from "../../components/common/PageHeader/PageHeader";
 import { useAuthContext } from "../../hooks/useAuthContext";
-import CookBooks from "../../layout/components/CookBooks";
-import SearchResultsList from "../../components/SearchResultsList";
 import { useRecipeContext } from "../../context/RecipeContext";
 import { useEffect, useState } from "react";
 import { useParams } from "react-router-dom";
