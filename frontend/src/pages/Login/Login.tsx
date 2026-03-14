@@ -226,7 +226,7 @@ const Login = () => {
                 transition={{ delay: 0.7 }}
                 className="text-center text-gray-400"
               >
-                Don't have an account?{" "}
+                Don&apos;t have an account?{" "}
                 <Link
                   to="/signup"
                   className="text-[#BE6F50] hover:text-[#E8956E] font-medium transition-colors"

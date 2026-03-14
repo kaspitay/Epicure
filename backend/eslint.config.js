@@ -1,34 +1,21 @@
-const js = require('@eslint/js');
-const prettier = require('eslint-config-prettier');
+import js from '@eslint/js';
+import tseslint from 'typescript-eslint';
+import prettier from 'eslint-config-prettier';
 
-module.exports = [
+export default [
+  {
+    ignores: ['dist/**', 'node_modules/**', 'eslint.config.mjs'],
+  },
   js.configs.recommended,
+  ...tseslint.configs.recommended,
   prettier,
   {
-    languageOptions: {
-      ecmaVersion: 2021,
-      sourceType: 'commonjs',
-      globals: {
-        console: 'readonly',
-        process: 'readonly',
-        __dirname: 'readonly',
-        module: 'readonly',
-        require: 'readonly',
-        exports: 'readonly',
-        Buffer: 'readonly',
-      },
-    },
+    files: ['**/*.ts'],
     rules: {
-      'no-unused-vars': ['warn', { argsIgnorePattern: '^_' }],
-      'no-console': 'off',
-      'prefer-const': 'error',
-      eqeqeq: ['error', 'always'],
-      curly: ['error', 'all'],
-      'no-var': 'error',
+      '@typescript-eslint/no-unused-vars': ['error', { argsIgnorePattern: '^_' }],
+      '@typescript-eslint/no-explicit-any': 'warn',
+      '@typescript-eslint/no-namespace': 'off',
       'preserve-caught-error': 'off',
     },
-  },
-  {
-    ignores: ['node_modules/', 'uploads/'],
   },
 ];
