@@ -1,17 +1,10 @@
 const Recipe = require("../models/RecipeModel");
 const users = require("../models/userModel");
-const AWS = require("aws-sdk");
 const { v4: uuidv4 } = require("uuid");
+const fs = require("fs");
+const path = require("path");
 
-AWS.config.update({
-  accessKeyId: process.env.AWS_ACCESS_KEY_ID,
-  secretAccessKey: process.env.AWS_SECRET_ACCESS_KEY,
-  region: process.env.AWS_REGION,
-});
-
-const s3 = new AWS.S3();
-
-async function uploadBase64ImageToS3(base64Image) {
+async function saveBase64ImageLocally(base64Image) {
   // Extract the MIME type and base64 data
   const matches = base64Image.match(/^data:(.+);base64,(.+)$/);
 
@@ -26,22 +19,14 @@ async function uploadBase64ImageToS3(base64Image) {
 
   // Generate a unique filename
   const fileExtension = mimeType.split("/")[1];
-  const key = `Food/${uuidv4()}.${fileExtension}`;
-
-  const params = {
-    Bucket: process.env.AWS_S3_BUCKET_NAME,
-    Key: key,
-    Body: buffer,
-    ContentEncoding: "base64",
-    ContentType: mimeType,
-    ACL: "public-read",
-  };
+  const filename = `${uuidv4()}.${fileExtension}`;
+  const filepath = path.join(__dirname, "../uploads/Food", filename);
 
   try {
-    const result = await s3.upload(params).promise();
-    return result.Location;
+    fs.writeFileSync(filepath, buffer);
+    return `http://localhost:${process.env.PORT}/uploads/Food/${filename}`;
   } catch (error) {
-    throw new Error(`Error uploading file to S3: ${error.message}`);
+    throw new Error(`Error saving file locally: ${error.message}`);
   }
 }
 
@@ -93,14 +78,14 @@ exports.createRecipe = async (req, res) => {
   try {
     // Upload main image
     if (req.body && req.body.image) {
-      image = await uploadBase64ImageToS3(req.body.image);
+      image = await saveBase64ImageLocally(req.body.image);
     }
 
     // Upload step images
     const updatedSteps = await Promise.all(
       steps.map(async (step) => {
         if (step.stepImage) {
-          const stepImageUrl = await uploadBase64ImageToS3(step.stepImage);
+          const stepImageUrl = await saveBase64ImageLocally(step.stepImage);
           return { ...step, stepImage: stepImageUrl };
         }
         return step;
@@ -110,7 +95,7 @@ exports.createRecipe = async (req, res) => {
     // Upload additional photos
     if (Array.isArray(req.body.photos)) {
       photos = await Promise.all(
-        req.body.photos.map((photo) => uploadBase64ImageToS3(photo.image))
+        req.body.photos.map((photo) => saveBase64ImageLocally(photo.image))
       );
     } else {
       photos = [];
