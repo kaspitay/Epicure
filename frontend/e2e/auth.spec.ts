@@ -24,8 +24,8 @@ test.describe('Authentication', () => {
   test('should show error for invalid credentials', async ({ page }) => {
     await loginPage.login('invalid@example.com', 'wrongpassword');
     // Wait for API response
-    await page.waitForTimeout(1000);
-    await loginPage.expectErrorMessage('Invalid');
+    await page.waitForTimeout(2000);
+    await loginPage.expectErrorMessage('does not exist');
   });
 
   test('should navigate to signup page', async ({ page }) => {

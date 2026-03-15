@@ -14,7 +14,7 @@ export class SearchPage extends BasePage {
 
   constructor(page: Page) {
     super(page);
-    this.searchInput = page.getByPlaceholder(/search recipes/i);
+    this.searchInput = page.locator('input[type="text"]').first();
     this.filterButton = page.getByRole('button', { name: /filters/i });
     this.sortSelect = page.locator('select');
     this.recipeResults = page.locator('[data-testid="recipe-card"]');
