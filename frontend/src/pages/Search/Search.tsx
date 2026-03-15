@@ -33,7 +33,7 @@ const Search = () => {
   // Data state
   const [recipes, setRecipes] = useState<Recipe[]>([]);
   const [availableTags, setAvailableTags] = useState<Record<string, TagDocument[]>>({});
-  const [suggestedTags, setSuggestedTags] = useState<{ name: string; category: string; count: number }[]>([]);
+  const [_suggestedTags, setSuggestedTags] = useState<{ name: string; category: string; count: number }[]>([]);
   const [popularTags, setPopularTags] = useState<TagDocument[]>([]);
 
   // UI state
@@ -138,6 +138,7 @@ const Search = () => {
       }, 300);
       return () => clearTimeout(debounce);
     }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [searchQuery, selectedTags, selectedCategory, sortBy, searchType]);
 
   // Update URL
@@ -170,7 +171,7 @@ const Search = () => {
     updateUrl(searchQuery, newTags, selectedCategory, sortBy);
   };
 
-  const handleCategoryChange = (category: string) => {
+  const _handleCategoryChange = (category: string) => {
     const newCategory = selectedCategory === category ? "" : category;
     setSelectedCategory(newCategory);
     updateUrl(searchQuery, selectedTags, newCategory, sortBy);
@@ -391,7 +392,7 @@ const Search = () => {
                 ))}
                 {searchQuery && (
                   <span className="px-2 py-1 rounded-full bg-[#2A2725] text-gray-300 text-xs">
-                    "{searchQuery}"
+                    &quot;{searchQuery}&quot;
                   </span>
                 )}
                 <button
