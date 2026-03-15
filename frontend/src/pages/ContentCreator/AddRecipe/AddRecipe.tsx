@@ -6,7 +6,11 @@ import RecipeForm from "../../../layout/components/RecipeForm";
 import TagSelector from "./TagSelector";
 import { TAG_CATEGORIES } from "../../../constants";
 
-const AddRecipe = ({ onRecipeAdded }) => {
+interface AddRecipeProps {
+  onRecipeAdded?: (recipe: unknown) => void;
+}
+
+const AddRecipe = ({ onRecipeAdded }: AddRecipeProps) => {
   const { user } = useAuthContext();
   const { setRecipes } = useRecipeContext();
 

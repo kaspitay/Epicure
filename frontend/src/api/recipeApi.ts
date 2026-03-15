@@ -23,6 +23,35 @@ export interface UpdateRecipeData {
   photos?: Photo[];
 }
 
+export interface SearchParams {
+  q?: string;
+  tags?: string[];
+  category?: string;
+  page?: number;
+  limit?: number;
+  sort?: 'newest' | 'oldest' | 'rating' | 'popular';
+  matchAll?: boolean;
+}
+
+export interface SearchResponse {
+  recipes: Recipe[];
+  pagination: {
+    page: number;
+    limit: number;
+    total: number;
+    totalPages: number;
+    hasMore: boolean;
+  };
+  filters: {
+    appliedTags: string[];
+    appliedCategory: string | null;
+    searchQuery: string | null;
+  };
+  suggestions: {
+    tags: { name: string; category: string; count: number }[];
+  };
+}
+
 export const recipeApi = {
   getAll: async (): Promise<Recipe[]> => {
     const response = await apiClient.get<{ recipes: Recipe[] }>('/recipe');
@@ -72,6 +101,21 @@ export const recipeApi = {
       averageRating: number;
       totalRatings: number;
     }>(`/recipe/${recipeId}/rating`, { params: { userId } });
+    return response.data;
+  },
+
+  search: async (params: SearchParams): Promise<SearchResponse> => {
+    const response = await apiClient.get<SearchResponse>('/recipe/search', {
+      params: {
+        q: params.q || '',
+        tags: params.tags?.join(',') || '',
+        category: params.category || '',
+        page: params.page || 1,
+        limit: params.limit || 20,
+        sort: params.sort || 'newest',
+        matchAll: params.matchAll ? 'true' : 'false',
+      },
+    });
     return response.data;
   },
 };
