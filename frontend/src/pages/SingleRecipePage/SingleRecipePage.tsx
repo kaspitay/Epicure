@@ -6,9 +6,10 @@ import { AiFillHeart } from "react-icons/ai";
 import About from "./About/About";
 import Ingredients from "./Ingredients/Ingredients";
 import Steps from "./Steps/Steps";
+import StarRating from "../../components/StarRating";
 import { useRecipeContext } from "../../context/RecipeContext";
 import { useAuthContext } from "../../hooks/useAuthContext";
-import { userApi } from "../../api";
+import { userApi, recipeApi } from "../../api";
 import { Recipe } from "../../types";
 
 const tabs = ["About", "Ingredients", "Steps"] as const;
@@ -18,20 +19,77 @@ const SingleRecipePage = () => {
   const { recipeid } = useParams();
   const { recipes } = useRecipeContext();
   const navigate = useNavigate();
-  const [recipe, setRecipe] = useState(
+  const [recipe, setRecipe] = useState<Recipe | null>(
     recipes.find((recipe) => recipe._id === recipeid) || null
   );
+  const [loading, setLoading] = useState(!recipe);
+
+  // Fetch recipe from API if not in context (handles refresh)
+  useEffect(() => {
+    const fetchRecipe = async () => {
+      if (!recipe && recipeid) {
+        setLoading(true);
+        try {
+          const fetchedRecipe = await recipeApi.getById(recipeid);
+          setRecipe(fetchedRecipe);
+        } catch (error) {
+          console.error("Error fetching recipe:", error);
+        }
+        setLoading(false);
+      }
+    };
+    fetchRecipe();
+  }, [recipe, recipeid]);
+
+  // Update recipe when context loads
+  useEffect(() => {
+    if (!recipe && recipes.length > 0) {
+      const found = recipes.find((r) => r._id === recipeid);
+      if (found) setRecipe(found);
+    }
+  }, [recipes, recipe, recipeid]);
   const [activeTab, setActiveTab] = useState<TabType>("About");
   const { user, users, dispatch } = useAuthContext();
   const creator = users.find((u) => u._id === recipe?.userId);
   const [liked, setLiked] = useState(false);
   const [showCookbookMenu, setShowCookbookMenu] = useState(false);
+  const [userRating, setUserRating] = useState<number | null>(null);
+  const [averageRating, setAverageRating] = useState<number>(recipe?.averageRating || 0);
+  const [totalRatings, setTotalRatings] = useState<number>(recipe?.totalRatings || 0);
 
   useEffect(() => {
     if (user?.user?.favorites?.includes(recipeid)) {
       setLiked(true);
     }
   }, [recipeid, user]);
+
+  // Fetch user's rating for this recipe
+  useEffect(() => {
+    const fetchRating = async () => {
+      if (!recipeid || !user?.user?._id) return;
+      try {
+        const data = await recipeApi.getUserRating(recipeid, user.user._id);
+        setUserRating(data.userRating);
+        setAverageRating(data.averageRating);
+        setTotalRatings(data.totalRatings);
+      } catch (error) {
+        console.error("Error fetching rating:", error);
+      }
+    };
+    fetchRating();
+  }, [recipeid, user?.user?._id]);
+
+  const handleRate = async (rating: number) => {
+    if (!recipeid || !user?.user?._id) return;
+    try {
+      const data = await recipeApi.rateRecipe(recipeid, user.user._id, rating);
+      setUserRating(rating);
+      setAverageRating(data.averageRating);
+      setTotalRatings(data.totalRatings);
+    } catch (error) {
+      console.error("Error rating recipe:", error);
+    }
+  };
 
   useEffect(() => {
     // Close dropdown when clicking outside
@@ -120,6 +178,14 @@ const SingleRecipePage = () => {
         return null;
     }
   };
+
+  if (loading) {
+    return (
+      <div className="flex items-center justify-center h-64">
+        <p className="text-gray-400">Loading recipe...</p>
+      </div>
+    );
+  }
 
   if (!recipe) {
     return (
@@ -219,6 +285,26 @@ const SingleRecipePage = () => {
                   </span>
                 </Link>
               )}
+
+              {/* Rating */}
+              <div className="mt-3">
+                <StarRating
+                  rating={averageRating}
+                  totalRatings={totalRatings}
+                  size="md"
+                  interactive={!!user}
+                  onRate={handleRate}
+                  userRating={userRating}
+                />
+                {!user && (
+                  <p className="text-gray-500 text-xs mt-1">
+                    <Link to="/login" className="text-[#BE6F50] hover:underline">
+                      Log in
+                    </Link>{" "}
+                    to rate this recipe
+                  </p>
+                )}
+              </div>
             </motion.div>
 
             {/* Action Buttons */}

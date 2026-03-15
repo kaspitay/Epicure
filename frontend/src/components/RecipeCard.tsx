@@ -3,6 +3,7 @@ import { motion } from "framer-motion";
 import { FiClock } from "react-icons/fi";
 import { AiFillHeart } from "react-icons/ai";
 import { Recipe } from "../types";
+import StarRating from "./StarRating";
 
 interface RecipeCardProps {
   recipe: Recipe;
@@ -75,6 +76,18 @@ const RecipeCard = ({ recipe, index = 0 }: RecipeCardProps) => {
             <h3 className="text-white font-medium text-sm leading-tight line-clamp-2 group-hover:text-[#BE6F50] transition-colors duration-200 flex-grow">
               {recipe.title}
             </h3>
+
+            {/* Rating */}
+            {(recipe.averageRating !== undefined && recipe.averageRating > 0) && (
+              <div className="mt-1">
+                <StarRating
+                  rating={recipe.averageRating}
+                  totalRatings={recipe.totalRatings}
+                  size="sm"
+                  showCount={true}
+                />
+              </div>
+            )}
 
             {/* Recipe Meta - Always at bottom */}
             <div className="flex items-center gap-2 mt-2 pt-2 border-t border-white/10 text-xs text-gray-400">

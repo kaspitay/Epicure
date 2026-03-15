@@ -5,6 +5,8 @@ import {
   createRecipe,
   updateRecipe,
   deleteRecipe,
+  rateRecipe,
+  getUserRating,
 } from '../controllers/recipeController';
 
 const router = express.Router();
@@ -15,5 +17,7 @@ router.post('/', createRecipe);
 router.put('/:id', updateRecipe);
 router.delete('/:id', deleteRecipe);
 router.post('/add_recipe/:creatorId', createRecipe);
+router.post('/:id/rate', rateRecipe);
+router.get('/:id/rating', getUserRating);
 
 export default router;

@@ -1,5 +1,5 @@
 import mongoose, { Schema, Model } from 'mongoose';
-import { IRecipe, IIngredient, IStep, ITag, IPhoto } from '../types';
+import { IRecipe, IIngredient, IStep, ITag, IPhoto, IRating } from '../types';
 
 const ingredientSchema = new Schema<IIngredient>({
   name: {
@@ -46,6 +46,24 @@ const photosSchema = new Schema<IPhoto>({
   image: String,
 });
 
+const ratingSchema = new Schema<IRating>({
+  userId: {
+    type: Schema.Types.ObjectId,
+    ref: 'User',
+    required: true,
+  },
+  rating: {
+    type: Number,
+    required: true,
+    min: 1,
+    max: 5,
+  },
+  createdAt: {
+    type: Date,
+    default: Date.now,
+  },
+});
+
 const recipeSchema = new Schema<IRecipe>(
   {
     title: {
@@ -64,13 +82,26 @@ const recipeSchema = new Schema<IRecipe>(
     steps: [stepsSchema],
     tags: [tagsSchema],
     photos: [photosSchema],
+    ratings: [ratingSchema],
     userId: {
       type: Schema.Types.ObjectId,
       ref: 'User',
     },
   },
-  { timestamps: true }
+  { timestamps: true, toJSON: { virtuals: true }, toObject: { virtuals: true } }
 );
+
+// Virtual for average rating
+recipeSchema.virtual('averageRating').get(function () {
+  if (!this.ratings || this.ratings.length === 0) return 0;
+  const sum = this.ratings.reduce((acc, r) => acc + r.rating, 0);
+  return Math.round((sum / this.ratings.length) * 10) / 10;
+});
+
+// Virtual for total ratings count
+recipeSchema.virtual('totalRatings').get(function () {
+  return this.ratings ? this.ratings.length : 0;
+});
 
 const Recipe: Model<IRecipe> = mongoose.model<IRecipe>('Recipe', recipeSchema);
 

@@ -17,7 +17,16 @@ import TagInspector from './debug/TagInspector';
 import './App.css';
 
 const App = () => {
-  const { user } = useAuthContext();
+  const { user, isAuthLoading } = useAuthContext();
+
+  // Show loading while checking auth state
+  if (isAuthLoading) {
+    return (
+      <div className="min-h-screen bg-gradient-to-br from-[#0A0A0A] to-[#1A1A1A] flex items-center justify-center">
+        <p className="text-gray-400">Loading...</p>
+      </div>
+    );
+  }
 
   return (
     <ErrorBoundary>

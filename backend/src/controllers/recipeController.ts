@@ -156,3 +156,82 @@ export const deleteRecipe = async (req: Request, res: Response): Promise<void> =
     res.status(400).json({ message: error.message });
   }
 };
+
+export const rateRecipe = async (req: Request, res: Response): Promise<void> => {
+  const { id } = req.params;
+  const { userId, rating } = req.body;
+
+  try {
+    if (!userId || !rating) {
+      res.status(400).json({ message: 'userId and rating are required' });
+      return;
+    }
+
+    if (rating < 1 || rating > 5) {
+      res.status(400).json({ message: 'Rating must be between 1 and 5' });
+      return;
+    }
+
+    const recipe = await Recipe.findById(id);
+    if (!recipe) {
+      res.status(404).json({ message: 'Recipe not found' });
+      return;
+    }
+
+    // Check if user already rated this recipe
+    const existingRatingIndex = recipe.ratings.findIndex(
+      (r) => r.userId.toString() === userId
+    );
+
+    if (existingRatingIndex !== -1) {
+      // Update existing rating
+      recipe.ratings[existingRatingIndex].rating = rating;
+      recipe.ratings[existingRatingIndex].createdAt = new Date();
+    } else {
+      // Add new rating
+      recipe.ratings.push({
+        userId: new Types.ObjectId(userId),
+        rating,
+        createdAt: new Date(),
+      });
+    }
+
+    await recipe.save();
+
+    res.status(200).json({
+      message: existingRatingIndex !== -1 ? 'Rating updated' : 'Rating added',
+      recipe,
+      averageRating: recipe.averageRating,
+      totalRatings: recipe.totalRatings,
+    });
+  } catch (err) {
+    const error = err as Error;
+    res.status(400).json({ message: error.message });
+  }
+};
+
+export const getUserRating = async (req: Request, res: Response): Promise<void> => {
+  const { id } = req.params;
+  const { userId } = req.query;
+
+  try {
+    const recipe = await Recipe.findById(id);
+    if (!recipe) {
+      res.status(404).json({ message: 'Recipe not found' });
+      return;
+    }
+
+    const userRating = recipe.ratings.find(
+      (r) => r.userId.toString() === userId
+    );
+
+    res.status(200).json({
+      userRating: userRating?.rating || null,
+      averageRating: recipe.averageRating,
+      totalRatings: recipe.totalRatings,
+    });
+  } catch (err) {
+    const error = err as Error;
+    res.status(400).json({ message: error.message });
+  }
+};

@@ -25,6 +25,13 @@ export interface IPhoto {
   image: string;
 }
 
+// Rating type
+export interface IRating {
+  userId: Types.ObjectId;
+  rating: number;
+  createdAt: Date;
+}
+
 // Recipe interface
 export interface IRecipe extends Document {
   title: string;
@@ -34,9 +41,12 @@ export interface IRecipe extends Document {
   steps: IStep[];
   tags: ITag[];
   photos: IPhoto[];
+  ratings: IRating[];
   userId: Types.ObjectId;
   createdAt: Date;
   updatedAt: Date;
+  averageRating?: number;
+  totalRatings?: number;
 }
 
 // Book/Cookbook type
