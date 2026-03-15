@@ -120,6 +120,7 @@ export interface AuthContextType {
   user: LoginResponse | null;
   dispatch: React.Dispatch<AuthAction>;
   users: User[];
+  isAuthLoading: boolean;
 }
 
 export interface RecipeContextType {

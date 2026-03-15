@@ -38,6 +38,7 @@ interface AuthContextProviderProps {
 export const AuthContextProvider = ({ children }: AuthContextProviderProps) => {
   const [state, dispatch] = useReducer(authReducer, initialState);
   const [users, setUsers] = useState<User[]>([]);
+  const [isAuthLoading, setIsAuthLoading] = useState(true);
 
   useEffect(() => {
     const storedUser = localStorage.getItem('user');
@@ -45,6 +46,7 @@ export const AuthContextProvider = ({ children }: AuthContextProviderProps) => {
       const user = JSON.parse(storedUser) as LoginResponse;
       dispatch({ type: 'LOGIN', payload: user });
     }
+    setIsAuthLoading(false);
   }, []);
 
   useEffect(() => {
@@ -61,7 +63,7 @@ export const AuthContextProvider = ({ children }: AuthContextProviderProps) => {
   }, [state]);
 
   return (
-    <AuthContext.Provider value={{ ...state, dispatch, users }}>
+    <AuthContext.Provider value={{ ...state, dispatch, users, isAuthLoading }}>
       {children}
     </AuthContext.Provider>
   );

@@ -19,9 +19,35 @@ const SingleRecipePage = () => {
   const { recipeid } = useParams();
   const { recipes } = useRecipeContext();
   const navigate = useNavigate();
-  const [recipe, setRecipe] = useState(
+  const [recipe, setRecipe] = useState<Recipe | null>(
     recipes.find((recipe) => recipe._id === recipeid) || null
   );
+  const [loading, setLoading] = useState(!recipe);
+
+  // Fetch recipe from API if not in context (handles refresh)
+  useEffect(() => {
+    const fetchRecipe = async () => {
+      if (!recipe && recipeid) {
+        setLoading(true);
+        try {
+          const fetchedRecipe = await recipeApi.getById(recipeid);
+          setRecipe(fetchedRecipe);
+        } catch (error) {
+          console.error("Error fetching recipe:", error);
+        }
+        setLoading(false);
+      }
+    };
+    fetchRecipe();
+  }, [recipe, recipeid]);
+
+  // Update recipe when context loads
+  useEffect(() => {
+    if (!recipe && recipes.length > 0) {
+      const found = recipes.find((r) => r._id === recipeid);
+      if (found) setRecipe(found);
+    }
+  }, [recipes, recipe, recipeid]);
   const [activeTab, setActiveTab] = useState<TabType>("About");
   const { user, users, dispatch } = useAuthContext();
   const creator = users.find((u) => u._id === recipe?.userId);
@@ -152,6 +178,14 @@ const SingleRecipePage = () => {
         return null;
     }
   };
+
+  if (loading) {
+    return (
+      <div className="flex items-center justify-center h-64">
+        <p className="text-gray-400">Loading recipe...</p>
+      </div>
+    );
+  }
 
   if (!recipe) {
     return (
