@@ -235,3 +235,119 @@ export const getUserRating = async (req: Request, res: Response): Promise<void> 
     res.status(400).json({ message: error.message });
   }
 };
+
+// Search recipes with filters, pagination, and sorting
+interface SearchQuery {
+  q?: string;
+  tags?: string;
+  category?: string;
+  page?: string;
+  limit?: string;
+  sort?: 'newest' | 'oldest' | 'rating' | 'popular';
+  matchAll?: string;
+}
+
+export const searchRecipes = async (
+  req: Request<object, object, object, SearchQuery>,
+  res: Response
+): Promise<void> => {
+  try {
+    const {
+      q = '',
+      tags = '',
+      category = '',
+      page = '1',
+      limit = '20',
+      sort = 'newest',
+      matchAll = 'false',
+    } = req.query;
+
+    const pageNum = Math.max(1, parseInt(page));
+    const limitNum = Math.min(50, Math.max(1, parseInt(limit)));
+    const skip = (pageNum - 1) * limitNum;
+
+    // Build query
+    const query: Record<string, unknown> = {};
+
+    // Text search (title and description)
+    if (q) {
+      query.$or = [
+        { title: { $regex: q, $options: 'i' } },
+        { description: { $regex: q, $options: 'i' } },
+      ];
+    }
+
+    // Tag filtering
+    if (tags) {
+      const tagList = tags.split(',').map((t) => t.trim()).filter(Boolean);
+      if (tagList.length > 0) {
+        if (matchAll === 'true') {
+          // Match ALL tags (AND logic)
+          query['tags.tag'] = { $all: tagList.map((t) => new RegExp(t, 'i')) };
+        } else {
+          // Match ANY tag (OR logic)
+          query['tags.tag'] = { $in: tagList.map((t) => new RegExp(t, 'i')) };
+        }
+      }
+    }
+
+    // Category filtering (filter by tag category)
+    if (category) {
+      query['tags.category'] = category;
+    }
+
+    // Sorting
+    let sortOption: Record<string, 1 | -1> = { createdAt: -1 };
+    switch (sort) {
+      case 'oldest':
+        sortOption = { createdAt: 1 };
+        break;
+      case 'rating':
+        sortOption = { averageRating: -1, createdAt: -1 };
+        break;
+      case 'popular':
+        sortOption = { totalRatings: -1, averageRating: -1 };
+        break;
+      default:
+        sortOption = { createdAt: -1 };
+    }
+
+    // Execute query with pagination
+    const [recipes, total] = await Promise.all([
+      Recipe.find(query).sort(sortOption).skip(skip).limit(limitNum),
+      Recipe.countDocuments(query),
+    ]);
+
+    // Get unique tags from results for filter suggestions
+    const tagAggregation = await Recipe.aggregate([
+      { $match: query },
+      { $unwind: '$tags' },
+      { $group: { _id: '$tags.tag', category: { $first: '$tags.category' }, count: { $sum: 1 } } },
+      { $sort: { count: -1 } },
+      { $limit: 20 },
+    ]);
+
+    res.status(200).json({
+      recipes,
+      pagination: {
+        page: pageNum,
+        limit: limitNum,
+        total,
+        totalPages: Math.ceil(total / limitNum),
+        hasMore: pageNum * limitNum < total,
+      },
+      filters: {
+        appliedTags: tags ? tags.split(',').map((t) => t.trim()) : [],
+        appliedCategory: category || null,
+        searchQuery: q || null,
+      },
+      suggestions: {
+        tags: tagAggregation.map((t) => ({ name: t._id, category: t.category, count: t.count })),
+      },
+    });
+  } catch (err) {
+    const error = err as Error;
+    console.error('Search error:', error);
+    res.status(500).json({ message: error.message });
+  }
+};

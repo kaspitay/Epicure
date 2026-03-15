@@ -7,10 +7,13 @@ import {
   deleteRecipe,
   rateRecipe,
   getUserRating,
+  searchRecipes,
 } from '../controllers/recipeController';
 
 const router = express.Router();
 
+// Search must come before /:id to avoid conflicts
+router.get('/search', searchRecipes);
 router.get('/:id', getRecipe);
 router.get('/', getRecipes);
 router.post('/', createRecipe);

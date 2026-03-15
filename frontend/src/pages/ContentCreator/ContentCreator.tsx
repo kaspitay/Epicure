@@ -8,7 +8,7 @@ import { useRecipeContext } from "../../context/RecipeContext";
 import { userApi } from "../../api";
 import RecipeCard from "../../components/RecipeCard";
 import SearchBar from "../Search/components/SearchBar";
-import AddRecipe from "./AddRecipe/AddRecipe";
+import AddRecipe from "./AddRecipe/AddRecipeRefactored";
 import { User, Recipe } from "../../types";
 
 type TabType = "recipes" | "search";

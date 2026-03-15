@@ -10,7 +10,7 @@ import CreatorSignUp from "../pages/CreatorSignUp/CreatorSignUp";
 import SingleRecipePage from "../pages/SingleRecipePage/SingleRecipePage";
 import CookBooks from "../pages/CookBooks/CookBooks";
 import ContentCreator from "../pages/ContentCreator/ContentCreator";
-import AddRecipe from "../pages/ContentCreator/AddRecipe/AddRecipe";
+import AddRecipe from "../pages/ContentCreator/AddRecipe/AddRecipeRefactored";
 
  export const router = createBrowserRouter([
     {
