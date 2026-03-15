@@ -2,6 +2,8 @@
 
 A modern recipe sharing platform where food enthusiasts can discover, save, and share culinary creations.
 
+**Live Demo:** https://epicure-sjia.onrender.com
+
 ![CI](https://github.com/kaspitay/Epicure/actions/workflows/ci.yml/badge.svg)
 ![React](https://img.shields.io/badge/React-18.2-blue?logo=react)
 ![TypeScript](https://img.shields.io/badge/TypeScript-5.9-blue?logo=typescript)
