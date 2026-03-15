@@ -71,4 +71,13 @@ mongo-data/
 **/*password*
 **/*key*
 **/*secret*
-**/*token*LEARNING_PLAN.md
+**/*token*
+
+# Personal files
+LEARNING_PLAN.md
+
+# Playwright
+/frontend/playwright-report/
+/frontend/playwright/.cache/
+/frontend/test-results/
+/frontend/e2e/screenshots/
