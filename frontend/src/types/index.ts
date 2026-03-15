@@ -23,6 +23,13 @@ export interface Photo {
   image: string;
 }
 
+// Rating type
+export interface Rating {
+  userId: string;
+  rating: number;
+  createdAt: string;
+}
+
 // Recipe interface
 export interface Recipe {
   _id: string;
@@ -33,9 +40,12 @@ export interface Recipe {
   steps: Step[];
   tags: Tag[];
   photos: Photo[];
+  ratings?: Rating[];
   userId: string;
   createdAt: string;
   updatedAt: string;
+  averageRating?: number;
+  totalRatings?: number;
 }
 
 // Book/Cookbook type

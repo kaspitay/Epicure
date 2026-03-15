@@ -50,6 +50,30 @@ export const recipeApi = {
   delete: async (id: string): Promise<void> => {
     await apiClient.delete(`/recipe/${id}`);
   },
+
+  rateRecipe: async (
+    recipeId: string,
+    userId: string,
+    rating: number
+  ): Promise<{ averageRating: number; totalRatings: number }> => {
+    const response = await apiClient.post<{
+      averageRating: number;
+      totalRatings: number;
+    }>(`/recipe/${recipeId}/rate`, { userId, rating });
+    return response.data;
+  },
+
+  getUserRating: async (
+    recipeId: string,
+    userId: string
+  ): Promise<{ userRating: number | null; averageRating: number; totalRatings: number }> => {
+    const response = await apiClient.get<{
+      userRating: number | null;
+      averageRating: number;
+      totalRatings: number;
+    }>(`/recipe/${recipeId}/rating`, { params: { userId } });
+    return response.data;
+  },
 };
 
 export default recipeApi;
