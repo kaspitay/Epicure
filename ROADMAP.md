@@ -60,11 +60,13 @@ This document outlines completed work and future plans for the Epicure project.
 - [x] Add docker-compose.dev.yml for development with hot reload
 - [x] Docker setup tested and working locally
 
-#### Infrastructure (Future - Cloud Deployment)
-- [ ] Set up free cloud hosting (Railway, Render, or Fly.io)
-- [ ] Create CD workflow for main branch
-- [ ] Configure production environment variables
-- [ ] Set up MongoDB Atlas for production (free tier)
+#### Infrastructure ✅
+- [x] Set up free cloud hosting on Render
+  - Frontend: https://epicure-sjia.onrender.com
+  - Backend: https://epicure-api.onrender.com
+- [x] Configure production environment variables
+- [x] MongoDB Atlas connected (free tier)
+- [ ] Create CD workflow for auto-deploy on merge (optional)
 
 ---
 
